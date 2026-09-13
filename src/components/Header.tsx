@@ -1,7 +1,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/server';
+import NavLinks from './NavLinks';
 
-export default function Header() {
+export default async function Header() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const firstName = user?.user_metadata?.first_name;
+
   return (
     <header className="sticky top-0 z-50 w-full border-b-[4px] border-accent-yellow bg-primary-dark shadow-xl">
       <div className="container mx-auto flex h-24 items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -11,27 +17,35 @@ export default function Header() {
               src="/logo_arras_tt.png"
               alt="Logo ArrasTT"
               fill
+              sizes="(max-width: 768px) 150px, 200px"
               className="object-contain p-1"
               priority
             />
           </div>
         </Link>
-        <nav className="hidden lg:flex items-center gap-6 text-sm font-bold uppercase tracking-wider text-white">
-          <Link href="/" className="hover:text-accent-yellow hover:-translate-y-1 transition-all">Accueil</Link>
-          <Link href="/club" className="hover:text-accent-yellow hover:-translate-y-1 transition-all">La vie du club</Link>
-          <Link href="/equipes" className="hover:text-accent-yellow hover:-translate-y-1 transition-all">Les équipes</Link>
-          <Link href="/inscriptions" className="hover:text-accent-yellow hover:-translate-y-1 transition-all">Inscriptions & Infos</Link>
-          <Link href="/evenements" className="hover:text-accent-yellow hover:-translate-y-1 transition-all text-accent-yellow">Vide-Grenier</Link>
-          <Link href="/medias" className="hover:text-accent-yellow hover:-translate-y-1 transition-all">Photos & Vidéos</Link>
-          <Link href="/contact" className="hover:text-accent-yellow hover:-translate-y-1 transition-all">Contact</Link>
-        </nav>
+        
+        {/* Navigation - Client Component for active state */}
+        <NavLinks />
+
         <div className="flex items-center gap-4">
-          <Link 
-            href="/espace-joueur" 
-            className="hidden md:inline-flex items-center justify-center bg-accent-purple px-6 py-3 text-sm font-black uppercase text-white shadow-[4px_4px_0px_0px_rgba(255,226,138,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,226,138,1)]"
-          >
-            Espace Joueur
-          </Link>
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <Link 
+                href="/espace-joueur" 
+                className="bg-accent-yellow text-primary-dark font-black uppercase px-6 py-2 shadow-[4px_4px_0px_0px_rgba(10,45,108,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(10,45,108,1)] transition-all flex items-center gap-2"
+              >
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                {firstName ? `Espace de ${firstName}` : "Espace Joueur"}
+              </Link>
+            ) : (
+              <Link 
+                href="/login" 
+                className="bg-white border-2 border-primary-dark text-primary-dark font-black uppercase px-6 py-2 shadow-[4px_4px_0px_0px_rgba(10,45,108,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(10,45,108,1)] transition-all"
+              >
+                Connexion
+              </Link>
+            )}
+          </div>
           <button className="lg:hidden text-accent-yellow">
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
           </button>

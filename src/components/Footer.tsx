@@ -12,6 +12,7 @@ export default function Footer() {
                 src="/logo_arras_tt.png"
                 alt="Logo ArrasTT"
                 fill
+                sizes="150px"
                 className="object-contain p-2 brightness-0 invert"
               />
             </div>
@@ -20,13 +21,13 @@ export default function Footer() {
             </p>
           </div>
           <div>
-            <h3 className="text-lg font-semibold mb-6 text-accent-yellow">Navigation</h3>
-            <ul className="space-y-3 text-sm text-white/80">
-              <li><Link href="/" className="hover:text-white transition-colors">Accueil</Link></li>
-              <li><Link href="/club" className="hover:text-white transition-colors">Le Club</Link></li>
-              <li><Link href="/equipes" className="hover:text-white transition-colors">Les Équipes</Link></li>
-              <li><Link href="/actualites" className="hover:text-white transition-colors">Actualités</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+            <h4 className="text-lg font-black uppercase text-white mb-4 border-b-2 border-zinc-800 pb-2">Navigation</h4>
+            <ul className="space-y-2 text-sm font-medium">
+              <li><Link href="/" className="hover:text-accent-yellow transition-colors">Accueil</Link></li>
+              <li><Link href="/club" className="hover:text-accent-yellow transition-colors">La vie du club</Link></li>
+              <li><Link href="/equipes" className="hover:text-accent-yellow transition-colors">Les équipes</Link></li>
+              <li><Link href="/inscriptions" className="hover:text-accent-yellow transition-colors">Inscriptions & infos</Link></li>
+              <li><Link href="/medias" className="hover:text-accent-yellow transition-colors">Photos & vidéos</Link></li>
             </ul>
           </div>
           <div>

@@ -188,16 +188,26 @@ export default function Home() {
       </section>
 
       {/* PARTENAIRES (Marquee style) */}
-      <section className="bg-white py-12 border-t-2 border-zinc-100">
-        <div className="container mx-auto px-4">
-          <h2 className="text-center text-sm font-black text-zinc-400 uppercase tracking-widest mb-8">Les partenaires du club</h2>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-            {/* Fake partner logos using text/boxes for now */}
-            <div className="font-black text-xl">VILLE D'ARRAS</div>
-            <div className="font-black text-xl italic">SPORTSREGIONS</div>
-            <div className="w-24 h-12 bg-zinc-200"></div>
-            <div className="w-24 h-12 bg-zinc-200"></div>
-            <div className="font-black text-xl">SERVICE CIVIQUE</div>
+      <section className="bg-white py-12 border-t-[8px] border-primary-dark overflow-hidden">
+        <div className="w-full flex justify-center mb-8">
+          <span className="bg-primary-dark text-white font-black text-xs uppercase tracking-widest px-4 py-1">
+            Ils nous soutiennent
+          </span>
+        </div>
+        
+        {/* Infinite Marquee Container */}
+        <div className="relative flex w-full overflow-hidden whitespace-nowrap">
+          {/* Inner scrolling track (duplicated content for seamless loop) */}
+          <div className="animate-marquee flex whitespace-nowrap items-center w-[200%]">
+            {[1, 2].map((loop) => (
+              <div key={loop} className="flex items-center justify-around w-1/2 opacity-60 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-300 gap-16 px-8">
+                <div className="font-black text-3xl tracking-tighter">VILLE D'ARRAS</div>
+                <div className="font-black text-2xl italic text-primary">SPORTSREGIONS</div>
+                <div className="font-black text-2xl text-accent-purple">PAS-DE-CALAIS</div>
+                <div className="font-black text-2xl uppercase border-2 border-black px-4 py-1">Service Civique</div>
+                <div className="font-black text-3xl tracking-wider text-zinc-400">CORA</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
