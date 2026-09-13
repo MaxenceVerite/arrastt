@@ -12,6 +12,7 @@ export default function ClientHeader({ user, firstName }: { user: any, firstName
 
   const links = [
     { name: "Accueil", href: "/" },
+    { name: "Le Planning", href: "/planning" },
     { name: "La vie du club", href: "/club" },
     { name: "Les équipes", href: "/equipes" },
     { name: "Inscriptions & infos", href: "/inscriptions" },
@@ -20,20 +21,26 @@ export default function ClientHeader({ user, firstName }: { user: any, firstName
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b-[4px] border-accent-yellow bg-primary-dark shadow-xl">
-        <div className="container mx-auto flex h-24 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-4 group">
-            <div className="relative h-16 w-40 bg-white rounded-br-3xl rounded-tl-3xl shadow-lg transition-transform duration-300 group-hover:-rotate-2 group-hover:scale-105 p-2">
+      <header className="sticky top-0 z-50 w-full border-b-[4px] border-accent-yellow bg-primary-dark shadow-xl overflow-hidden relative">
+        <div className="container mx-auto flex h-28 items-center justify-between px-4 sm:px-6 lg:px-8 relative z-10">
+          
+          <div className="relative flex items-center h-full ml-4 md:ml-8">
+            {/* Le fond biseauté forme maintenant un parallélogramme centré sur le logo */}
+            <div className="absolute top-0 bottom-0 left-[-30px] right-[-40px] bg-white transform -skew-x-[20deg] z-0 border-r-[6px] border-l-[6px] border-accent-purple shadow-[8px_0px_0px_0px_rgba(255,226,138,1)]"></div>
+            
+            <Link href="/" className="relative flex items-center gap-4 group z-10 h-full py-2">
+              <div className="relative h-20 w-48 md:h-24 md:w-56 transition-transform duration-300 group-hover:scale-105">
               <Image
                 src="/logo_arras_tt.png"
                 alt="Logo ArrasTT"
                 fill
-                sizes="(max-width: 768px) 150px, 200px"
-                className="object-contain p-1"
+                sizes="(max-width: 768px) 200px, 250px"
+                className="object-contain"
                 priority
               />
             </div>
-          </Link>
+            </Link>
+          </div>
           
           {/* Desktop Navigation */}
           <NavLinks />
@@ -43,16 +50,17 @@ export default function ClientHeader({ user, firstName }: { user: any, firstName
               {user ? (
                 <Link 
                   href="/espace-joueur" 
-                  className="bg-accent-yellow text-primary-dark font-black uppercase px-6 py-2 shadow-[4px_4px_0px_0px_rgba(10,45,108,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(10,45,108,1)] transition-all flex items-center gap-2"
+                  className="flex items-center gap-3 px-6 py-3 bg-white/10 hover:bg-white text-white hover:text-primary-dark font-bold uppercase transition-colors border-2 border-white/20 hover:border-white"
                 >
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                   {firstName ? `Espace de ${firstName}` : "Espace Joueur"}
                 </Link>
               ) : (
                 <Link 
                   href="/login" 
-                  className="bg-white border-2 border-primary-dark text-primary-dark font-black uppercase px-6 py-2 shadow-[4px_4px_0px_0px_rgba(10,45,108,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(10,45,108,1)] transition-all"
+                  className="flex items-center gap-3 px-6 py-3 bg-white/10 hover:bg-white text-white hover:text-primary-dark font-bold uppercase transition-colors border-2 border-white/20 hover:border-white"
                 >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
                   Connexion
                 </Link>
               )}

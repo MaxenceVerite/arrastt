@@ -7,49 +7,46 @@ export default function Home() {
     <div className="flex flex-col w-full bg-background overflow-x-hidden">
       <Script src="https://platform.twitter.com/widgets.js" strategy="afterInteractive" />
       
-      {/* Brutalist Hero Section */}
-      <section className="relative w-full border-b-[8px] border-primary">
-        <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[70vh]">
-          {/* Text Content */}
-          <div className="lg:col-span-7 bg-primary-dark p-8 md:p-16 flex flex-col justify-center relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-accent-purple opacity-20 blur-3xl"></div>
-            <h1 className="text-6xl md:text-8xl font-black text-white uppercase leading-[0.85] tracking-tighter mb-6">
+      {/* Brutalist Hero Section with Full Background Video */}
+      <section className="relative w-full border-b-[8px] border-primary min-h-[70vh] flex items-center overflow-hidden">
+        
+        {/* Background Video */}
+        <div className="absolute inset-0 z-0">
+          <video 
+            src="/video_fond_presentation.mp4" 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className="w-full h-full object-cover"
+          />
+          {/* Gradient Overlay: Solid blue on left, fading to transparent on right. Darker on mobile for text readability. */}
+          <div className="absolute inset-0 bg-primary-dark/80 md:bg-gradient-to-r md:from-primary-dark md:via-primary-dark/80 md:to-primary-dark/20"></div>
+        </div>
+
+        {/* Text Content */}
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-20">
+          <div className="max-w-3xl">
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-accent-purple opacity-30 blur-3xl rounded-full pointer-events-none"></div>
+            
+            <h1 className="text-6xl md:text-8xl font-black text-white uppercase leading-[0.85] tracking-tighter mb-6 relative drop-shadow-xl">
               Arras <span className="text-accent-yellow">TT</span>
               <br/>
-              <span className="text-primary text-5xl md:text-7xl block mt-2">Le Ping Sans Limite</span>
+              <span className="text-blue-400 text-5xl md:text-7xl block mt-2">Tennis de Table</span>
             </h1>
-            <p className="text-white/80 text-lg md:text-xl font-medium max-w-xl border-l-4 border-accent-purple pl-6 py-2 mb-8">
+            
+            <p className="text-white text-lg md:text-xl font-medium max-w-xl border-l-4 border-accent-purple pl-6 py-2 mb-10 relative drop-shadow-md">
               Bienvenue sur le site internet du club de tennis de table d'Arras. <br/>
               Plus de 100 licencié(e)s, 10 équipes en compétition, et une passion commune.
             </p>
-            <div className="flex flex-wrap gap-4">
+            
+            <div className="flex flex-wrap gap-6 relative">
               <Link href="/inscriptions" className="bg-accent-yellow text-primary-dark font-black uppercase px-8 py-4 shadow-[6px_6px_0px_0px_rgba(24,115,211,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(24,115,211,1)] transition-all">
                 Rejoindre le club
               </Link>
-              <Link href="/actualites" className="bg-transparent border-4 border-white text-white font-black uppercase px-8 py-4 hover:bg-white hover:text-primary-dark transition-colors">
+              <Link href="/actualites" className="bg-transparent border-4 border-white text-white font-black uppercase px-8 py-4 hover:bg-white hover:text-primary-dark transition-colors backdrop-blur-sm">
                 À la une
               </Link>
-            </div>
-          </div>
-          
-          {/* Featured Image/Shape area */}
-          <div className="lg:col-span-5 bg-zinc-100 relative min-h-[400px] flex items-center justify-center p-8 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-accent-purple opacity-10"></div>
-            {/* Racket Shape Abstraction */}
-            <div className="relative w-full max-w-md aspect-square">
-              <div className="absolute top-10 left-10 w-full h-full bg-accent-yellow rounded-full mix-blend-multiply animate-pulse"></div>
-              <div className="absolute bottom-10 right-10 w-full h-full bg-primary rounded-full mix-blend-multiply"></div>
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-white rounded-3xl shadow-2xl p-4 flex flex-col justify-center items-center text-center rotate-3">
-                <h3 className="font-black text-2xl text-primary-dark uppercase mb-2">Entraînements</h3>
-                <p className="font-bold text-accent-purple">Saison 2026-2027</p>
-                <div className="mt-4 text-sm font-medium text-left space-y-2 text-primary-dark/80">
-                  <p><span className="font-bold text-primary-dark">Mar & Jeu :</span> 18h30 - 20h30 (Dirigé)</p>
-                  <p><span className="font-bold text-primary-dark">Mer & Ven :</span> 14h - 17h / Libre</p>
-                </div>
-                <div className="mt-4 bg-primary-dark text-white text-xs font-bold px-4 py-2 rounded">
-                  Salle Vandamme
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -88,30 +85,41 @@ export default function Home() {
               </div>
             </div>
 
-            {/* DERNIÈRES NEWS (Grid) */}
+            {/* FIL D'ACTUALITÉS COMPLET */}
             <div>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-4 h-12 bg-primary"></div>
-                <h2 className="text-4xl font-black text-primary-dark uppercase">Dernières News</h2>
+                <h2 className="text-4xl font-black text-primary-dark uppercase">Fil d'actualités</h2>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-6">
                 {[
-                  { title: "Fermeture Salle Vandamme", cat: "Infos", date: "il y a 2 mois", color: "bg-primary" },
-                  { title: "Résultats Championnat de France", cat: "Résultats", date: "il y a 2 mois", color: "bg-accent-purple" },
-                  { title: "Classement équipes 2e phase", cat: "Équipes", date: "il y a 2 mois", color: "bg-accent-yellow" },
-                  { title: "Tournoi Achicourt", cat: "Tournoi", date: "il y a 3 mois", color: "bg-primary-dark" }
+                  { title: "Assemblée Générale 2026", desc: "Retour sur les points clés de notre AG annuelle et les objectifs pour la saison à venir.", date: "10 Septembre 2026", cat: "Infos" },
+                  { title: "Nouveaux maillots", desc: "La commande des nouveaux maillots Arras TT est ouverte ! Découvrez le design officiel.", date: "02 Septembre 2026", cat: "Boutique" },
+                  { title: "Stage de perfectionnement Jeunes", desc: "Félicitations à tous les participants du stage de la Toussaint organisé par David.", date: "25 Août 2026", cat: "Stage" },
+                  { title: "Fermeture Salle Vandamme", desc: "La salle sera exceptionnellement fermée ce week-end pour cause de travaux électriques.", date: "12 Août 2026", cat: "Infos" },
+                  { title: "Résultats Championnat de France", desc: "Superbe parcours de nos joueurs lors des championnats de France. L'équipe 1 se maintient !", date: "15 Juin 2026", cat: "Résultats" }
                 ].map((news, i) => (
-                  <div key={i} className="border-2 border-zinc-200 hover:border-primary transition-colors p-4 flex gap-4 bg-white">
-                    <div className={`w-24 h-24 ${news.color} flex-shrink-0 flex items-center justify-center p-2 text-center`}>
-                       <span className="text-white text-xs font-black rotate-[-10deg]">{news.cat}</span>
-                    </div>
-                    <div className="flex flex-col justify-between py-1">
-                      <h4 className="font-bold text-primary-dark leading-snug hover:text-primary cursor-pointer">{news.title}</h4>
-                      <span className="text-xs font-bold text-zinc-400 uppercase">{news.date}</span>
-                    </div>
+                  <div key={i} className="border-l-8 border-primary bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all flex flex-col md:flex-row gap-6">
+                     <div className="md:w-32 flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-zinc-100 pb-4 md:pb-0 md:pr-4">
+                        <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block mb-2">{news.date}</span>
+                        <span className="bg-primary/10 text-primary-dark font-black text-xs uppercase px-3 py-1 inline-block">{news.cat}</span>
+                     </div>
+                     <div className="flex-grow">
+                        <h3 className="text-xl font-black text-primary-dark mb-2 leading-tight hover:text-primary transition-colors cursor-pointer">{news.title}</h3>
+                        <p className="text-foreground/80 font-medium mb-4">{news.desc}</p>
+                        <button className="font-black text-primary flex items-center gap-2 hover:gap-4 transition-all uppercase text-xs tracking-wider">
+                          Lire la suite <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        </button>
+                     </div>
                   </div>
                 ))}
+              </div>
+              
+              <div className="flex justify-center mt-8">
+                <button className="bg-primary-dark text-white font-black uppercase px-8 py-4 shadow-[4px_4px_0px_0px_rgba(168,80,155,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(168,80,155,1)] transition-all">
+                  Charger plus d'actualités
+                </button>
               </div>
             </div>
             
