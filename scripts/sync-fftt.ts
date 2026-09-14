@@ -85,7 +85,7 @@ async function syncWithSupabase() {
     if (supabase) {
       console.log("Préparation de l'envoi vers Supabase...");
       
-      const formattedPlayers = players.map(p => {
+      const formattedPlayers = players.map((p: any) => {
         // FFTT clast is usually a number like 5, 12, 20. We convert it to approximate points (e.g., 5 -> 500) 
         // if exact points are not available in this endpoint.
         const clastPoints = parseInt(p.clast, 10) * 100 || 500;
