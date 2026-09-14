@@ -26,7 +26,7 @@ export default function ClientHeader({ user, firstName }: { user: any, firstName
           
           <div className="relative flex items-center h-full ml-4 md:ml-8">
             {/* Le fond biseauté forme maintenant un parallélogramme centré sur le logo */}
-            <div className="absolute top-0 bottom-0 left-[-30px] right-[-40px] bg-white transform -skew-x-[20deg] z-0 border-r-[6px] border-l-[6px] border-accent-purple shadow-[8px_0px_0px_0px_rgba(255,226,138,1)]"></div>
+            <div className="absolute top-0 bottom-0 left-[-15px] right-[-15px] bg-white transform -skew-x-[20deg] z-0 border-r-[6px] border-l-[6px] border-accent-purple shadow-[8px_0px_0px_0px_rgba(255,226,138,1)]"></div>
             
             <Link href="/" className="relative flex items-center gap-4 group z-10 h-full py-2">
               <div className="relative h-20 w-48 md:h-24 md:w-56 transition-transform duration-300 group-hover:scale-105">

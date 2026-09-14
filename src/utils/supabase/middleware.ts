@@ -40,5 +40,28 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Admin protection
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+  const isAdminLogin = request.nextUrl.pathname === '/admin/login'
+  
+  if (isAdminRoute && !isAdminLogin) {
+    const adminSession = request.cookies.get('admin_session')
+    if (!adminSession || adminSession.value !== 'authenticated') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin/login'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Redirect admin to dashboard if already logged in and visiting /admin/login
+  if (isAdminLogin) {
+    const adminSession = request.cookies.get('admin_session')
+    if (adminSession && adminSession.value === 'authenticated') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }

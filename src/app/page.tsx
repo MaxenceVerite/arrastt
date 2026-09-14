@@ -13,7 +13,7 @@ export default function Home() {
         {/* Background Video */}
         <div className="absolute inset-0 z-0">
           <video 
-            src="/video_fond_presentation.mp4" 
+            src="/medias/video_fond_presentation.mp4" 
             autoPlay 
             loop 
             muted 
@@ -44,7 +44,7 @@ export default function Home() {
               <Link href="/inscriptions" className="bg-accent-yellow text-primary-dark font-black uppercase px-8 py-4 shadow-[6px_6px_0px_0px_rgba(24,115,211,1)] hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-[3px_3px_0px_0px_rgba(24,115,211,1)] transition-all">
                 Rejoindre le club
               </Link>
-              <Link href="/actualites" className="bg-transparent border-4 border-white text-white font-black uppercase px-8 py-4 hover:bg-white hover:text-primary-dark transition-colors backdrop-blur-sm">
+              <Link href="#actualites" className="bg-transparent border-4 border-white text-white font-black uppercase px-8 py-4 hover:bg-white hover:text-primary-dark transition-colors backdrop-blur-sm">
                 À la une
               </Link>
             </div>
@@ -60,7 +60,7 @@ export default function Home() {
           <div className="lg:col-span-8 flex flex-col gap-12">
             
             {/* A LA UNE */}
-            <div>
+            <div id="actualites">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-4 h-12 bg-accent-yellow"></div>
                 <h2 className="text-4xl font-black text-primary-dark uppercase">À La Une</h2>
@@ -106,11 +106,13 @@ export default function Home() {
                         <span className="bg-primary/10 text-primary-dark font-black text-xs uppercase px-3 py-1 inline-block">{news.cat}</span>
                      </div>
                      <div className="flex-grow">
-                        <h3 className="text-xl font-black text-primary-dark mb-2 leading-tight hover:text-primary transition-colors cursor-pointer">{news.title}</h3>
+                        <h3 className="text-xl font-black text-primary-dark mb-2 leading-tight hover:text-primary transition-colors cursor-pointer">
+                          <Link href={`/actualites/${news.title.toLowerCase().replace(/ /g, '-')}`}>{news.title}</Link>
+                        </h3>
                         <p className="text-foreground/80 font-medium mb-4">{news.desc}</p>
-                        <button className="font-black text-primary flex items-center gap-2 hover:gap-4 transition-all uppercase text-xs tracking-wider">
+                        <Link href={`/actualites/${news.title.toLowerCase().replace(/ /g, '-')}`} className="font-black text-primary flex items-center gap-2 hover:gap-4 transition-all uppercase text-xs tracking-wider">
                           Lire la suite <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                        </button>
+                        </Link>
                      </div>
                   </div>
                 ))}
@@ -136,12 +138,12 @@ export default function Home() {
                   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.469h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.469h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                   Facebook
                 </h3>
-                <div className="bg-white rounded overflow-hidden flex justify-center">
+                <div className="bg-white rounded overflow-hidden flex justify-center w-full py-4">
                   <iframe 
                     src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FArrasTT&tabs=timeline&width=340&height=400&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false&appId" 
                     width="340" 
                     height="400" 
-                    style={{ border: 'none', overflow: 'hidden' }} 
+                    style={{ border: 'none', overflow: 'hidden', maxWidth: '100%' }} 
                     scrolling="no" 
                     frameBorder="0" 
                     allowFullScreen={true} 

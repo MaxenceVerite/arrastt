@@ -12,10 +12,11 @@ export default function NavLinks() {
     { name: "Les équipes", href: "/equipes" },
     { name: "Inscriptions & infos", href: "/inscriptions" },
     { name: "Photos & vidéos", href: "/medias" },
+    { name: "Contact", href: "/contact" },
   ];
 
   return (
-    <nav className="hidden lg:flex items-center space-x-8">
+    <nav className="hidden lg:flex items-center space-x-4 xl:space-x-8 ml-8 xl:ml-0">
       {links.map((link) => {
         const isActive = pathname === link.href || pathname?.startsWith(link.href + '/');
         

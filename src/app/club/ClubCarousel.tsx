@@ -8,11 +8,11 @@ export default function ClubCarousel() {
   const carouselRef = useRef<HTMLDivElement>(null);
 
   const images = [
-    "https://picsum.photos/seed/ping1/800/600",
-    "https://picsum.photos/seed/ping2/800/600",
-    "https://picsum.photos/seed/ping3/800/600",
-    "https://picsum.photos/seed/ping4/800/600",
-    "https://picsum.photos/seed/ping5/800/600",
+    "/medias/devanture_salle_vandamme.jpg",
+    "/medias/image_club_arrastt_1.jpg",
+    "/medias/image_club_arrastt_2.jpg",
+    "/medias/image_club_arrastt_3.jpg",
+    "/medias/image_club_arrastt_4.jpg",
   ];
 
   const scrollLeft = () => {

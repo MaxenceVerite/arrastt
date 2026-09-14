@@ -7,13 +7,13 @@ export default function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div className="flex flex-col items-start gap-4">
-            <div className="relative h-16 w-40 bg-white/10 rounded-xl p-2 backdrop-blur-sm">
+            <div className="relative h-16 w-40 bg-white rounded-xl p-2 shadow-md">
               <Image
                 src="/logo_arras_tt.png"
                 alt="Logo ArrasTT"
                 fill
                 sizes="150px"
-                className="object-contain p-2 brightness-0 invert"
+                className="object-contain p-2"
               />
             </div>
             <p className="text-white/70 text-sm max-w-xs mt-4">
@@ -28,6 +28,7 @@ export default function Footer() {
               <li><Link href="/equipes" className="hover:text-accent-yellow transition-colors">Les équipes</Link></li>
               <li><Link href="/inscriptions" className="hover:text-accent-yellow transition-colors">Inscriptions & infos</Link></li>
               <li><Link href="/medias" className="hover:text-accent-yellow transition-colors">Photos & vidéos</Link></li>
+              <li><Link href="/contact" className="hover:text-accent-yellow transition-colors">Contact</Link></li>
             </ul>
           </div>
           <div>
@@ -46,9 +47,10 @@ export default function Footer() {
         </div>
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/50">
           <p>&copy; {new Date().getFullYear()} Arras TT. Tous droits réservés.</p>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap justify-center">
             <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions Légales</Link>
             <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
+            <Link href="/cgu" className="hover:text-white transition-colors">CGU</Link>
           </div>
         </div>
       </div>
