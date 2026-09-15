@@ -41,8 +41,8 @@ async function fetchFromFftt(endpoint: string, params: Record<string, string> = 
 }
 
 async function run() {
-    const res = await fetchFromFftt('xml_partie', { numlic: '6218401' });
-    console.log(JSON.stringify(res, null, 2));
+    const resultPartie = await fetchFromFftt('xml_partie_mysql', { licence: '6218401' });
+    console.log(JSON.stringify(resultPartie, null, 2));
 }
 
 run();

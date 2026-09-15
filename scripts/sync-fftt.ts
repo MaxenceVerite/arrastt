@@ -239,16 +239,16 @@ async function syncIndividualStats() {
   for (const player of dbPlayers) {
     const licence = player.license_number;
     
-    // 1. Fetch parties
-    const resultPartie = await fetchFromFftt('xml_partie', { numlic: licence });
+    // 1. Fetch parties (using xml_partie_mysql to get historical matches)
+    const resultPartie = await fetchFromFftt('xml_partie_mysql', { licence });
     if (resultPartie?.liste?.partie) {
       const parties = Array.isArray(resultPartie.liste.partie) ? resultPartie.liste.partie : [resultPartie.liste.partie];
       const formattedMatches = [];
       
       for (const p of parties) {
         if (!p.idpartie) continue;
-        const victoire = p.victoire || p.vd; // API can sometimes return 'vd' or 'victoire' depending on versions, let's be safe.
-        if (!victoire) continue; // Skip matches without a result (forfeits, not played, etc.)
+        const victoire = p.victoire || p.vd; // Handle both APIs
+        if (!victoire) continue; 
         
         let match_date = null;
         if (p.date) {
@@ -259,15 +259,15 @@ async function syncIndividualStats() {
            }
         }
         
-        const opponent_name = [p.nom, p.prenom].filter(Boolean).join(' ');
+        const opponent_name = p.advnompre || [p.nom, p.prenom].filter(Boolean).join(' ') || 'Inconnu';
 
         formattedMatches.push({
            license_number: licence,
            idpartie: p.idpartie,
            vd: victoire,
            opponent_name,
-           opponent_license: p.licence || p.numj || null,
-           opponent_ranking: p.classement || null,
+           opponent_license: p.advlic || p.licence || p.numj || null,
+           opponent_ranking: p.advclaof || p.classement || null,
            match_date,
            point_result: p.pointres ? parseFloat(p.pointres) : null,
            coefficient: p.coefchamp ? parseFloat(p.coefchamp) : null
