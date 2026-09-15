@@ -47,7 +47,7 @@ function getFfttCredentials() {
 async function fetchPlayers() {
   const { appId, tm, tmc } = getFfttCredentials();
   
-  const url = `https://www.fftt.com/mobile/pxml/xml_liste_joueur.php?serie=${appId}&tm=${tm}&tmc=${tmc}&club=${FFTT_CLUB_ID}`;
+  const url = `https://www.fftt.com/mobile/pxml/xml_liste_joueur.php?serie=${appId}&id=${appId}&tm=${tm}&tmc=${tmc}&club=${FFTT_CLUB_ID}`;
   
   console.log("Fetching FFTT API at URL (with auth):", url.replace(/tmc=[^&]+/, 'tmc=***'));
   
