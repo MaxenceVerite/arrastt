@@ -1,10 +1,21 @@
-name: Sync FFTT Players
+name: Sync FFTT Data
 
 on:
   schedule:
     # Run every day at 03:00 AM UTC
     - cron: '0 3 * * *'
   workflow_dispatch: # Allow manual trigger
+    inputs:
+      sync_target:
+        description: 'What to sync?'
+        required: true
+        default: '--all'
+        type: choice
+        options:
+          - '--all'
+          - '--players'
+          - '--teams'
+          - '--club'
 
 jobs:
   sync:
@@ -28,4 +39,4 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           FFTT_CLUB_ID: ${{ secrets.FFTT_CLUB_ID }}
-        run: npm run sync:fftt
+        run: npm run sync:fftt -- ${{ github.event.inputs.sync_target || '--all' }}

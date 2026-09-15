@@ -24,10 +24,7 @@ const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabase
 
 function getFfttCredentials() {
   const now = new Date();
-  
-  // Format YYYYMMDDHHmmssSSS
   const pad = (n: number, width: number = 2) => String(n).padStart(width, '0');
-  
   const YYYY = now.getFullYear();
   const MM = pad(now.getMonth() + 1);
   const DD = pad(now.getDate());
@@ -37,82 +34,205 @@ function getFfttCredentials() {
   const SSS = pad(now.getMilliseconds(), 3);
   
   const tm = `${YYYY}${MM}${DD}${HH}${mm}${ss}${SSS}`;
-  
   const passwordMd5 = crypto.createHash('md5').update(FFTT_APP_KEY).digest('hex');
   const tmc = crypto.createHmac('sha1', passwordMd5).update(tm).digest('hex');
   
   return { appId: FFTT_APP_ID, tm, tmc };
 }
 
-async function fetchPlayers() {
+async function fetchFromFftt(endpoint: string, params: Record<string, string> = {}) {
   const { appId, tm, tmc } = getFfttCredentials();
+  const queryParams = new URLSearchParams({
+    serie: appId,
+    id: appId,
+    tm,
+    tmc,
+    ...params
+  });
   
-  const url = `https://www.fftt.com/mobile/pxml/xml_liste_joueur.php?serie=${appId}&id=${appId}&tm=${tm}&tmc=${tmc}&club=${FFTT_CLUB_ID}`;
-  
-  console.log("Fetching FFTT API at URL (with auth):", url.replace(/tmc=[^&]+/, 'tmc=***'));
-  
+  const url = `https://www.fftt.com/mobile/pxml/${endpoint}.php?${queryParams.toString()}`;
+  console.log(`Fetching ${endpoint}...`);
   try {
     const response = await fetch(url);
     const xmlText = await response.text();
-    
-    // Convert XML to JSON
-    const result = await parseStringPromise(xmlText, { explicitArray: false });
-    
-    if (!result.liste || !result.liste.joueur) {
-      console.log("Aucun joueur trouvé ou erreur de l'API FFTT.");
-      console.log("Réponse brute :", xmlText);
-      return [];
-    }
-    
-    // Ensure players is an array
-    const players = Array.isArray(result.liste.joueur) ? result.liste.joueur : [result.liste.joueur];
-    
-    console.log(`✅ ${players.length} joueurs récupérés depuis la FFTT.`);
-    return players;
+    return await parseStringPromise(xmlText, { explicitArray: false });
   } catch (err) {
-    console.error("Erreur lors de la récupération depuis l'API FFTT :", err);
-    return [];
+    console.error(`Erreur sur l'API FFTT (${endpoint}) :`, err);
+    return null;
   }
 }
 
-async function syncWithSupabase() {
-  console.log("Début de la synchronisation FFTT -> Supabase...");
-  const players = await fetchPlayers();
+async function syncPlayers() {
+  console.log("--- Sync Joueurs ---");
+  const result = await fetchFromFftt('xml_liste_joueur', { club: FFTT_CLUB_ID });
+  if (!result?.liste?.joueur) return console.log("Aucun joueur trouvé.");
   
-  if (players.length > 0) {
-    console.log("Exemple de données du premier joueur :", players[0]);
+  const players = Array.isArray(result.liste.joueur) ? result.liste.joueur : [result.liste.joueur];
+  console.log(`✅ ${players.length} joueurs récupérés.`);
+  
+  if (supabase) {
+    const formattedPlayers = players.map((p: any) => ({
+      license_number: p.licence,
+      first_name: p.prenom,
+      last_name: p.nom,
+      points: parseInt(p.clast, 10) * 100 || 500,
+      club_name: p.club
+    }));
     
-    if (supabase) {
-      console.log("Préparation de l'envoi vers Supabase...");
-      
-      const formattedPlayers = players.map((p: any) => {
-        // FFTT clast is usually a number like 5, 12, 20. We convert it to approximate points (e.g., 5 -> 500) 
-        // if exact points are not available in this endpoint.
-        const clastPoints = parseInt(p.clast, 10) * 100 || 500;
-        
-        return {
-          license_number: p.licence,
-          first_name: p.prenom,
-          last_name: p.nom,
-          points: clastPoints,
-          club_name: p.club
-        };
-      });
-      
-      const { data, error } = await supabase
-        .from('players')
-        .upsert(formattedPlayers, { onConflict: 'license_number' });
-        
-      if (error) {
-        console.error("❌ Erreur lors de la sauvegarde dans Supabase :", error);
-      } else {
-        console.log(`✅ ${formattedPlayers.length} joueurs insérés/mis à jour dans Supabase avec succès !`);
-      }
-    } else {
-       console.log("Pour insérer ces données, ajoutez NEXT_PUBLIC_SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY dans .env.local");
-    }
+    const { error } = await supabase.from('players').upsert(formattedPlayers, { onConflict: 'license_number' });
+    if (error) console.error("❌ Erreur Supabase :", error);
+    else console.log(`✅ ${formattedPlayers.length} joueurs mis à jour dans Supabase.`);
   }
 }
 
-// Lancement du script
-syncWithSupabase();
+async function syncClub() {
+  console.log("--- Sync Club ---");
+  const result = await fetchFromFftt('xml_club_detail', { club: FFTT_CLUB_ID });
+  if (!result?.liste?.club) return console.log("Club non trouvé.");
+  
+  const c = result.liste.club;
+  console.log(`✅ Club récupéré: ${c.nom}`);
+  
+  if (supabase) {
+    const formattedClub = {
+      numero: c.numero,
+      nom: c.nom,
+      nomsalle: c.nomsalle,
+      adressesalle1: c.adressesalle1,
+      adressesalle2: c.adressesalle2,
+      adressesalle3: c.adressesalle3,
+      codepsalle: c.codepsalle,
+      villesalle: c.villesalle,
+      web: c.web,
+      nomcor: c.nomcor,
+      prenomcor: c.prenomcor,
+      mailcor: c.mailcor,
+      telcor: c.telcor,
+      latitude: c.latitude,
+      longitude: c.longitude
+    };
+    
+    const { error } = await supabase.from('club_info').upsert(formattedClub, { onConflict: 'numero' });
+    if (error) console.error("❌ Erreur Supabase :", error);
+    else console.log(`✅ Club mis à jour dans Supabase.`);
+  }
+}
+
+async function syncTeamsAndMatches() {
+  console.log("--- Sync Equipes ---");
+  const result = await fetchFromFftt('xml_equipe', { numclu: FFTT_CLUB_ID });
+  if (!result?.liste?.equipe) return console.log("Aucune équipe trouvée.");
+  
+  const teams = Array.isArray(result.liste.equipe) ? result.liste.equipe : [result.liste.equipe];
+  console.log(`✅ ${teams.length} équipes récupérées.`);
+  
+  if (supabase) {
+    const formattedTeams = teams.map((t: any) => ({
+      fftt_id: t.idequipe,
+      name: t.libequipe,
+      division: t.libdivision,
+      pool: t.liendivision,
+    }));
+    
+    const { error } = await supabase.from('teams').upsert(formattedTeams, { onConflict: 'fftt_id' });
+    if (error) console.error("❌ Erreur Supabase (teams) :", error);
+    else console.log(`✅ ${formattedTeams.length} équipes mises à jour dans Supabase.`);
+  }
+  
+  // Now sync matches for each team. We need the internal team ID from Supabase for relationships.
+  console.log("--- Sync Matchs ---");
+  if (!supabase) return;
+  
+  const { data: dbTeams, error: dbTeamsError } = await supabase.from('teams').select('id, fftt_id, pool');
+  if (dbTeamsError || !dbTeams) return console.error("Impossible de récupérer les équipes pour les matchs.");
+  
+  let matchesCount = 0;
+  for (const team of dbTeams) {
+    if (!team.pool || !team.pool.includes('cx_poule=')) continue; // We need the poule string
+    
+    // team.pool is like "cx_poule=1407258&D1=234625&organisme_pere=67"
+    const params = new URLSearchParams(team.pool);
+    const cx_poule = params.get('cx_poule');
+    const D1 = params.get('D1');
+    
+    if (!cx_poule || !D1) continue;
+    
+    const resultEqu = await fetchFromFftt('xml_result_equ', { auto: '1', D1, cx_poule });
+    if (!resultEqu?.liste?.tour) continue;
+    
+    const tours = Array.isArray(resultEqu.liste.tour) ? resultEqu.liste.tour : [resultEqu.liste.tour];
+    
+    const formattedMatches: any[] = [];
+    for (const match of tours) {
+      if (!match.lien) continue;
+      
+      const isHome = match.equa.includes('ARRAS');
+      const opponent_name = isHome ? match.equb : match.equa;
+      
+      // Compute score
+      let score_arras = null;
+      let score_opponent = null;
+      let match_result_enum = null;
+      
+      // sometimes scores are empty strings if match didn't happen yet
+      if (match.scorea && match.scoreb) {
+        const scoreA = parseInt(match.scorea);
+        const scoreB = parseInt(match.scoreb);
+        if (!isNaN(scoreA) && !isNaN(scoreB)) {
+          score_arras = isHome ? scoreA : scoreB;
+          score_opponent = isHome ? scoreB : scoreA;
+          
+          if (score_arras > score_opponent) match_result_enum = 'victory';
+          else if (score_arras < score_opponent) match_result_enum = 'defeat';
+          else match_result_enum = 'draw';
+        }
+      }
+      
+      // Parse match_date
+      let match_date = null;
+      if (match.dateprevue) { // formats like DD/MM/YYYY or DD/MM/YY
+        const parts = match.dateprevue.split('/');
+        if (parts.length === 3) {
+          const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+          match_date = new Date(`${year}-${parts[1]}-${parts[0]}T00:00:00Z`).toISOString();
+        }
+      }
+      
+      formattedMatches.push({
+        fftt_id: match.lien, // Unique identifier for the match link
+        team_id: team.id,
+        opponent_name,
+        is_home: isHome,
+        score_arras,
+        score_opponent,
+        result: match_result_enum,
+        match_date,
+      });
+    }
+    
+    if (formattedMatches.length > 0) {
+      const { error } = await supabase.from('team_matches').upsert(formattedMatches, { onConflict: 'fftt_id' });
+      if (error) {
+        console.error(`❌ Erreur Supabase (team_matches) pour l'équipe ${team.fftt_id}:`, error);
+      } else {
+        matchesCount += formattedMatches.length;
+      }
+    }
+    
+    // delay to not hammer the API
+    await new Promise(r => setTimeout(r, 200));
+  }
+  
+  console.log(`✅ ${matchesCount} matchs mis à jour dans Supabase.`);
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+  const runAll = args.length === 0 || args.includes('--all');
+  
+  if (runAll || args.includes('--club')) await syncClub();
+  if (runAll || args.includes('--players')) await syncPlayers();
+  if (runAll || args.includes('--teams') || args.includes('--matches')) await syncTeamsAndMatches();
+}
+
+main();
