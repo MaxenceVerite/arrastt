@@ -79,3 +79,20 @@ export async function linkLicense(formData: FormData) {
 
   revalidatePath('/espace-joueur')
 }
+
+export async function unlinkLicense() {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Non authentifié" }
+  
+  const { error } = await supabase.auth.updateUser({
+    data: { license_number: null }
+  })
+
+  if (error) {
+    return { error: translateError(error.message) }
+  }
+
+  revalidatePath('/espace-joueur')
+}

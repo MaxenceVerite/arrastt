@@ -6,16 +6,18 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch: # Allow manual trigger
     inputs:
-      sync_target:
-        description: 'What to sync?'
+      sync_type:
+        description: 'Quelles données synchroniser ?'
         required: true
-        default: '--all'
+        default: 'all'
         type: choice
         options:
-          - '--all'
-          - '--players'
-          - '--teams'
-          - '--club'
+          - all
+          - players
+          - club
+          - teams
+          - matches
+          - stats
 
 jobs:
   sync:

@@ -2,6 +2,8 @@ import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import { logout } from '../auth/actions'
 import LicenseForm from './LicenseForm'
+import ProgressionChart from './ProgressionChart'
+import UnlinkButton from './UnlinkButton'
 
 export default async function EspaceJoueurPage() {
   const supabase = await createClient()
@@ -11,17 +13,35 @@ export default async function EspaceJoueurPage() {
     redirect('/login')
   }
 
-  // Get metadata (includes first_name, last_name, and license_number if added)
-  const metadata = user.user_metadata || {}
-  const hasLicense = !!metadata.license_number
+  const metadata = user.user_metadata || {};
+  const license_number = metadata.license_number;
+  const hasLicense = !!license_number;
 
-  // Mock FFTT Data
-  const mockFfttData = {
-    points: 1245,
-    classement: "12",
-    progression: "+15",
-    victoires: 24,
-    defaites: 12
+  let player = null;
+  let matches = [];
+  let rankings = [];
+
+  if (hasLicense) {
+    // Fetch player data
+    const { data: pData } = await supabase.from('players').select('*').eq('license_number', license_number).single();
+    player = pData;
+    
+    // Fetch matches
+    const { data: mData } = await supabase.from('player_matches').select('*').eq('license_number', license_number).order('match_date', { ascending: false });
+    matches = mData || [];
+    
+    // Fetch rankings
+    const { data: rData } = await supabase.from('player_rankings').select('*').eq('license_number', license_number).order('saison', { ascending: false }).order('phase', { ascending: false });
+    rankings = rData || [];
+  }
+  
+  // Calculate mock or real stats
+  const currentPoints = rankings.length > 0 ? rankings[0].points : player?.points || '---';
+  const currentRank = rankings.length > 0 ? rankings[0].rank : '---';
+  
+  let progression = 0;
+  if (rankings.length > 1) {
+    progression = currentPoints - rankings[rankings.length - 1].points; // progress over known history
   }
 
   return (
@@ -65,28 +85,37 @@ export default async function EspaceJoueurPage() {
                     {metadata.first_name?.[0]}{metadata.last_name?.[0]}
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-primary-dark uppercase">{metadata.first_name} {metadata.last_name}</h3>
-                    <p className="text-accent-purple font-bold">Licence N° {metadata.license_number}</p>
+                    <h3 className="text-xl font-black text-primary-dark uppercase">{player?.first_name || metadata.first_name} {player?.last_name || metadata.last_name}</h3>
+                    <div className="flex items-center gap-4">
+                      <p className="text-accent-purple font-bold">Licence N° {license_number}</p>
+                      <UnlinkButton license_number={license_number} />
+                    </div>
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-zinc-100 p-4 border-2 border-zinc-200">
                     <p className="text-xs font-bold text-zinc-500 uppercase">Points</p>
-                    <p className="text-2xl font-black text-primary-dark">{mockFfttData.points}</p>
+                    <p className="text-2xl font-black text-primary-dark">{currentPoints}</p>
                   </div>
                   <div className="bg-zinc-100 p-4 border-2 border-zinc-200">
                     <p className="text-xs font-bold text-zinc-500 uppercase">Class.</p>
-                    <p className="text-2xl font-black text-primary-dark">{mockFfttData.classement}</p>
+                    <p className="text-2xl font-black text-primary-dark">{currentRank}</p>
                   </div>
                   <div className="bg-accent-yellow/20 p-4 border-2 border-accent-yellow col-span-2 flex justify-between items-center">
                     <p className="text-sm font-bold text-primary-dark uppercase">Progression</p>
-                    <p className="text-xl font-black text-green-600">{mockFfttData.progression}</p>
+                    <p className={`text-xl font-black ${progression >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+                      {progression > 0 ? '+' : ''}{progression} pts
+                    </p>
                   </div>
+                </div>
+                
+                <div className="mt-8 border-t-2 border-zinc-100 pt-6">
+                  <h4 className="font-black text-sm uppercase text-primary-dark mb-2">Évolution du classement</h4>
+                  <ProgressionChart data={rankings} />
                 </div>
               </div>
             </div>
-
             {/* Main Content Area */}
             <div className="lg:col-span-8 flex flex-col gap-8">
               {/* Historique Matchs Mock */}
@@ -97,22 +126,23 @@ export default async function EspaceJoueurPage() {
                 </h3>
                 
                 <div className="space-y-4">
-                  {[
-                    { adversaire: "DUPONT Pierre", class: "13", score: "V (3-1)", pts: "+4.5" },
-                    { adversaire: "MARTIN Luc", class: "11", score: "V (3-0)", pts: "+1.2" },
-                    { adversaire: "BERNARD Alain", class: "14", score: "D (1-3)", pts: "-2.1" },
-                  ].map((match, i) => (
-                    <div key={i} className="flex justify-between items-center p-4 border-b-2 border-zinc-100 hover:bg-zinc-50 transition-colors">
+                  {matches.slice(0, 15).map((match: any) => (
+                    <div key={match.id} className="flex justify-between items-center p-4 border-b-2 border-zinc-100 hover:bg-zinc-50 transition-colors">
                       <div>
-                        <p className="font-bold text-primary-dark">{match.adversaire}</p>
-                        <p className="text-sm text-zinc-500 font-medium">Classé {match.class}</p>
+                        <p className="font-bold text-primary-dark">{match.opponent_name}</p>
+                        <p className="text-sm text-zinc-500 font-medium">Classé {match.opponent_ranking} • {match.match_date ? new Date(match.match_date).toLocaleDateString('fr-FR') : 'Date inconnue'}</p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-black ${match.score.startsWith('V') ? 'text-green-600' : 'text-red-500'}`}>{match.score}</p>
-                        <p className="text-sm font-bold text-zinc-400">{match.pts} pts</p>
+                        <p className={`font-black ${match.vd === 'V' ? 'text-green-600' : 'text-red-500'}`}>{match.vd}</p>
+                        <p className="text-sm font-bold text-zinc-400">
+                          {match.point_result > 0 ? '+' : ''}{match.point_result} pts
+                        </p>
                       </div>
                     </div>
                   ))}
+                  {matches.length === 0 && (
+                    <p className="text-zinc-500 italic py-4">Aucun match trouvé pour cette licence.</p>
+                  )}
                 </div>
                 
                 <button className="mt-6 w-full text-center py-4 bg-zinc-100 hover:bg-zinc-200 text-primary-dark font-bold uppercase transition-colors">

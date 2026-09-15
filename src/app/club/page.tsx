@@ -2,8 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import ClubCarousel from "./ClubCarousel";
+import { createClient } from "@/utils/supabase/server";
 
-export default function ClubPage() {
+export default async function ClubPage() {
+  const supabase = await createClient();
+  const { data: clubInfo } = await supabase.from('club_info').select('*').single();
 
   return (
     <div className="flex flex-col w-full bg-background overflow-x-hidden">
@@ -31,20 +34,41 @@ export default function ClubPage() {
           {/* LEFT COLUMN: History, Bureau, News */}
           <div className="lg:col-span-8 flex flex-col gap-16">
             
-            {/* Histoire & Valeurs */}
+            {/* Histoire & Valeurs & Localisation */}
             <div>
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-4 h-12 bg-primary"></div>
-                <h2 className="text-4xl font-black text-primary-dark uppercase">Notre Histoire</h2>
+                <h2 className="text-4xl font-black text-primary-dark uppercase">Le Club</h2>
               </div>
-              <div className="prose prose-lg prose-zinc max-w-none text-foreground/80 font-medium leading-relaxed">
+              <div className="prose prose-lg prose-zinc max-w-none text-foreground/80 font-medium leading-relaxed mb-8">
                 <p>
-                  Fondé avec la passion du ping, l'<strong>Arras Tennis de Table</strong> s'est imposé comme l'un des clubs majeurs de la région. De la formation des plus jeunes à notre équipe fanion évoluant en Nationale 3, nous cultivons le dépassement de soi dans un esprit de franche camaraderie.
+                  Fondé avec la passion du ping, l'<strong>{clubInfo?.nom || 'Arras Tennis de Table'}</strong> s'est imposé comme l'un des clubs majeurs de la région. De la formation des plus jeunes à notre équipe fanion, nous cultivons le dépassement de soi dans un esprit de franche camaraderie.
                 </p>
                 <p>
-                  Notre salle spécifique, la <strong>Salle Vandamme</strong>, nous permet de vous accueillir tous les jours dans des conditions de jeu optimales, que vous soyez là pour le loisir ou pour viser les sommets.
+                  Notre salle spécifique, la <strong>{clubInfo?.nomsalle || 'Salle Vandamme'}</strong>, nous permet de vous accueillir tous les jours dans des conditions de jeu optimales.
                 </p>
               </div>
+
+              {clubInfo && (
+                <div className="bg-zinc-50 border-2 border-zinc-200 p-6 flex flex-col md:flex-row gap-8">
+                  <div className="flex-1">
+                    <h3 className="font-black text-xl text-primary-dark uppercase mb-4 border-b-2 border-accent-yellow pb-2 inline-block">Localisation</h3>
+                    <p className="font-bold text-foreground/80">
+                      {clubInfo.adressesalle1}<br/>
+                      {clubInfo.adressesalle2 && <>{clubInfo.adressesalle2}<br/></>}
+                      {clubInfo.codepsalle} {clubInfo.villesalle}
+                    </p>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-xl text-primary-dark uppercase mb-4 border-b-2 border-accent-purple pb-2 inline-block">Contact FFTT</h3>
+                    <p className="font-bold text-foreground/80">
+                      {clubInfo.prenomcor} {clubInfo.nomcor}<br/>
+                      <a href={`mailto:${clubInfo.mailcor}`} className="text-primary hover:underline">{clubInfo.mailcor}</a><br/>
+                      <a href={`tel:${clubInfo.telcor}`} className="text-primary hover:underline">{clubInfo.telcor}</a>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Le Bureau */}

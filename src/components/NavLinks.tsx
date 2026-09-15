@@ -9,7 +9,7 @@ export default function NavLinks() {
   const links = [
     { name: "Accueil", href: "/" },
     { name: "La vie du club", href: "/club" },
-    { name: "Les équipes", href: "/equipes" },
+    { name: "L'Équipe", href: "/equipe" },
     { name: "Inscriptions & infos", href: "/inscriptions" },
     { name: "Photos & vidéos", href: "/medias" },
     { name: "Contact", href: "/contact" },

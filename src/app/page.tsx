@@ -1,8 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
+import { createClient } from "@/utils/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: matches } = await supabase.from('team_matches').select('*, teams(name)').order('match_date', { ascending: false });
+  
+  const now = new Date();
+  const recentMatches = matches?.filter(m => m.match_date && new Date(m.match_date) < now).slice(0, 5) || [];
+  const upcomingHomeMatches = matches?.filter(m => m.match_date && new Date(m.match_date) >= now && m.is_home).sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime()).slice(0, 5) || [];
+
   return (
     <div className="flex flex-col w-full bg-background overflow-x-hidden">
       <Script src="https://platform.twitter.com/widgets.js" strategy="afterInteractive" />
@@ -164,32 +172,58 @@ export default function Home() {
               </div>
             </div>
 
-            {/* PROCHAINS EVENEMENTS */}
+            {/* PROCHAINS MATCHS A DOMICILE */}
             <div className="border-2 border-zinc-200 bg-zinc-50 p-6">
-              <h3 className="font-black uppercase text-xl mb-6 text-primary-dark border-b-2 border-accent-yellow pb-2">Prochains Événements</h3>
-              <div className="py-8 text-center text-zinc-500 font-medium italic">
-                Aucun événement à afficher pour le moment.
+              <h3 className="font-black uppercase text-xl mb-6 text-primary-dark border-b-2 border-accent-yellow pb-2 flex items-center gap-2">
+                <svg className="w-6 h-6 text-accent-yellow" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                Prochains Matchs à Domicile
+              </h3>
+              <div className="flex flex-col gap-4">
+                {upcomingHomeMatches.map(match => (
+                  <div key={match.id} className="border-l-4 border-accent-yellow pl-4 flex flex-col gap-1">
+                    <span className="text-xs font-bold text-zinc-500 uppercase">
+                      {new Date(match.match_date).toLocaleDateString('fr-FR')} - {(match.teams as any)?.name}
+                    </span>
+                    <span className="font-black text-primary-dark">Arras TT reçoit {match.opponent_name}</span>
+                  </div>
+                ))}
+                {upcomingHomeMatches.length === 0 && (
+                  <div className="py-4 text-zinc-500 font-medium italic">Aucun match à domicile prévu prochainement.</div>
+                )}
               </div>
             </div>
 
-            {/* CALENDRIER */}
+            {/* DERNIERS RESULTATS */}
             <div className="border-2 border-primary bg-white p-6">
-              <h3 className="font-black uppercase text-xl mb-6 text-primary-dark flex justify-between items-center">
-                Calendrier
-                <span className="text-primary text-sm font-bold bg-primary/10 px-2 py-1 rounded">Sept 2026</span>
+              <h3 className="font-black uppercase text-xl mb-6 text-primary-dark flex justify-between items-center border-b-2 border-primary pb-2">
+                Derniers Résultats
               </h3>
-              {/* Fake Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1 text-center text-sm mb-2 font-bold text-zinc-400">
-                <div>Lu</div><div>Ma</div><div>Me</div><div>Je</div><div>Ve</div><div>Sa</div><div>Di</div>
+              <div className="flex flex-col gap-4">
+                {recentMatches.map(match => (
+                  <div key={match.id} className="flex justify-between items-center border-b border-zinc-100 pb-2">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-zinc-500 uppercase">{(match.teams as any)?.name}</span>
+                      <span className="font-black text-primary-dark truncate max-w-[180px]">vs {match.opponent_name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {match.score_arras !== null && match.score_opponent !== null ? (
+                        <div className="flex items-center gap-1 font-black">
+                          <span className={match.result === 'victory' ? 'text-green-600' : ''}>{match.score_arras}</span>
+                          <span className="text-zinc-300">-</span>
+                          <span className={match.result === 'defeat' ? 'text-red-600' : ''}>{match.score_opponent}</span>
+                        </div>
+                      ) : (
+                        <span className="text-zinc-400 font-bold text-xs italic">N/A</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {recentMatches.length === 0 && (
+                  <div className="py-4 text-zinc-500 font-medium italic">Aucun résultat récent.</div>
+                )}
               </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium">
-                <div className="p-2 text-zinc-300">31</div>
-                {[1,2,3,4].map(d => <div key={d} className="p-2">{d}</div>)}
-                <div className="p-2 bg-primary text-white font-bold">5</div>
-                <div className="p-2 bg-primary text-white font-bold">6</div>
-                {[7,8,9,10,11,12].map(d => <div key={d} className="p-2">{d}</div>)}
-                <div className="p-2 border-2 border-accent-purple text-accent-purple font-bold">13</div>
-                {[14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30].map(d => <div key={d} className="p-2">{d}</div>)}
+              <div className="mt-6 text-center">
+                 <Link href="/equipe" className="text-primary font-black uppercase text-sm hover:underline">Voir tout le sportif</Link>
               </div>
             </div>
 

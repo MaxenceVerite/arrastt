@@ -226,6 +226,90 @@ async function syncTeamsAndMatches() {
   console.log(`✅ ${matchesCount} matchs mis à jour dans Supabase.`);
 }
 
+async function syncIndividualStats() {
+  console.log("--- Sync Stats Individuelles (Parties & Classements) ---");
+  if (!supabase) return;
+
+  const { data: dbPlayers, error: dbPlayersError } = await supabase.from('players').select('license_number');
+  if (dbPlayersError || !dbPlayers) return console.error("Impossible de récupérer les joueurs.");
+
+  let matchesCount = 0;
+  let rankingsCount = 0;
+
+  for (const player of dbPlayers) {
+    const licence = player.license_number;
+    
+    // 1. Fetch parties
+    const resultPartie = await fetchFromFftt('xml_partie', { numlic: licence });
+    if (resultPartie?.liste?.partie) {
+      const parties = Array.isArray(resultPartie.liste.partie) ? resultPartie.liste.partie : [resultPartie.liste.partie];
+      const formattedMatches = [];
+      
+      for (const p of parties) {
+        if (!p.idpartie) continue;
+        
+        let match_date = null;
+        if (p.date) {
+           const parts = p.date.split('/');
+           if (parts.length === 3) {
+             const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+             match_date = new Date(`${year}-${parts[1]}-${parts[0]}T00:00:00Z`).toISOString();
+           }
+        }
+        
+        formattedMatches.push({
+           license_number: licence,
+           idpartie: p.idpartie,
+           vd: p.vd,
+           opponent_name: `${p.nom} ${p.prenom}`,
+           opponent_license: p.numj,
+           opponent_ranking: p.classement,
+           match_date,
+           point_result: p.pointres ? parseFloat(p.pointres) : null,
+           coefficient: p.coefchamp ? parseFloat(p.coefchamp) : null
+        });
+      }
+      
+      if (formattedMatches.length > 0) {
+        const { error } = await supabase.from('player_matches').upsert(formattedMatches, { onConflict: 'license_number, idpartie' });
+        if (error) console.error(`❌ Erreur Supabase (player_matches) pour ${licence}:`, error);
+        else matchesCount += formattedMatches.length;
+      }
+    }
+    
+    await new Promise(r => setTimeout(r, 200));
+
+    // 2. Fetch rankings history
+    const resultHisto = await fetchFromFftt('xml_histo_classement', { numlic: licence });
+    if (resultHisto?.liste?.histo) {
+      const histos = Array.isArray(resultHisto.liste.histo) ? resultHisto.liste.histo : [resultHisto.liste.histo];
+      const formattedRankings = [];
+      
+      for (const h of histos) {
+         if (!h.saison || !h.phase) continue;
+         
+         formattedRankings.push({
+            license_number: licence,
+            saison: h.saison,
+            phase: h.phase,
+            points: h.point ? parseFloat(h.point) : 0,
+            rank: h.clast || null
+         });
+      }
+      
+      if (formattedRankings.length > 0) {
+        const { error } = await supabase.from('player_rankings').upsert(formattedRankings, { onConflict: 'license_number, saison, phase' });
+        if (error) console.error(`❌ Erreur Supabase (player_rankings) pour ${licence}:`, error);
+        else rankingsCount += formattedRankings.length;
+      }
+    }
+    
+    await new Promise(r => setTimeout(r, 200));
+  }
+  
+  console.log(`✅ ${matchesCount} parties et ${rankingsCount} historiques de classement mis à jour.`);
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const runAll = args.length === 0 || args.includes('--all');
@@ -233,6 +317,7 @@ async function main() {
   if (runAll || args.includes('--club')) await syncClub();
   if (runAll || args.includes('--players')) await syncPlayers();
   if (runAll || args.includes('--teams') || args.includes('--matches')) await syncTeamsAndMatches();
+  if (runAll || args.includes('--stats')) await syncIndividualStats();
 }
 
 main();
