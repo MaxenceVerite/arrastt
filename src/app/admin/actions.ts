@@ -8,7 +8,7 @@ export async function loginAdmin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  const supabase = createClient();
+  const supabase = await createClient();
   
   const { data: admin, error } = await supabase
     .from("admins")
@@ -21,7 +21,8 @@ export async function loginAdmin(formData: FormData) {
     return { error: "Identifiants incorrects" };
   }
 
-  cookies().set("admin_session", "authenticated", {
+  const cookieStore = await cookies();
+  cookieStore.set("admin_session", "authenticated", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -33,7 +34,8 @@ export async function loginAdmin(formData: FormData) {
 }
 
 export async function logoutAdmin() {
-  cookies().delete("admin_session");
+  const cookieStore = await cookies();
+  cookieStore.delete("admin_session");
   redirect("/admin/login");
 }
 
@@ -43,12 +45,13 @@ export async function logoutAdmin() {
 
 export async function updateSiteContent(sectionKey: string, content: any) {
   // Check if admin is logged in (security measure on server actions)
-  const adminSession = cookies().get("admin_session");
+  const cookieStore = await cookies();
+  const adminSession = cookieStore.get("admin_session");
   if (!adminSession || adminSession.value !== "authenticated") {
     throw new Error("Non autorisé");
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   
   // Upsert the content
   const { error } = await supabase
