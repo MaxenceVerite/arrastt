@@ -247,6 +247,7 @@ async function syncIndividualStats() {
       
       for (const p of parties) {
         if (!p.idpartie) continue;
+        if (!p.vd) continue; // Skip matches without a result (forfeits, not played, etc.)
         
         let match_date = null;
         if (p.date) {
@@ -257,13 +258,15 @@ async function syncIndividualStats() {
            }
         }
         
+        const opponent_name = [p.nom, p.prenom].filter(Boolean).join(' ');
+
         formattedMatches.push({
            license_number: licence,
            idpartie: p.idpartie,
            vd: p.vd,
-           opponent_name: `${p.nom} ${p.prenom}`,
-           opponent_license: p.numj,
-           opponent_ranking: p.classement,
+           opponent_name,
+           opponent_license: p.numj || null,
+           opponent_ranking: p.classement || null,
            match_date,
            point_result: p.pointres ? parseFloat(p.pointres) : null,
            coefficient: p.coefchamp ? parseFloat(p.coefchamp) : null
