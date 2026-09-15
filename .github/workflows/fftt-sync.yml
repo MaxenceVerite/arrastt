@@ -19,7 +19,7 @@ on:
           - players
           - club
       full_history:
-        description: '⚠️ Forcer le téléchargement de TOUT l\'historique des joueurs (très lent, utile uniquement si données perdues)'
+        description: "⚠️ Forcer le téléchargement de TOUT l'historique des joueurs (très lent, utile uniquement si données perdues)"
         required: false
         type: boolean
         default: false
