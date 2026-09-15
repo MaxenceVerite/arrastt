@@ -247,7 +247,8 @@ async function syncIndividualStats() {
       
       for (const p of parties) {
         if (!p.idpartie) continue;
-        if (!p.vd) continue; // Skip matches without a result (forfeits, not played, etc.)
+        const victoire = p.victoire || p.vd; // API can sometimes return 'vd' or 'victoire' depending on versions, let's be safe.
+        if (!victoire) continue; // Skip matches without a result (forfeits, not played, etc.)
         
         let match_date = null;
         if (p.date) {
@@ -263,9 +264,9 @@ async function syncIndividualStats() {
         formattedMatches.push({
            license_number: licence,
            idpartie: p.idpartie,
-           vd: p.vd,
+           vd: victoire,
            opponent_name,
-           opponent_license: p.numj || null,
+           opponent_license: p.licence || p.numj || null,
            opponent_ranking: p.classement || null,
            match_date,
            point_result: p.pointres ? parseFloat(p.pointres) : null,
