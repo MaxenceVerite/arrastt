@@ -7,17 +7,22 @@ on:
   workflow_dispatch: # Allow manual trigger
     inputs:
       sync_type:
-        description: 'Quelles données synchroniser ?'
+        description: 'Cible de synchronisation (Que voulez-vous mettre à jour ?)'
         required: true
         default: 'all'
         type: choice
         options:
           - all
+          - stats
+          - matches
+          - teams
           - players
           - club
-          - teams
-          - matches
-          - stats
+      full_history:
+        description: '⚠️ Forcer le téléchargement de TOUT l\'historique des joueurs (très lent, utile uniquement si données perdues)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   sync:
@@ -41,4 +46,9 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           FFTT_CLUB_ID: ${{ secrets.FFTT_CLUB_ID }}
-        run: npm run sync:fftt -- --${{ github.event.inputs.sync_type || 'all' }}
+        run: |
+          ARGS="--${{ github.event.inputs.sync_type || 'all' }}"
+          if [ "${{ github.event.inputs.full_history }}" = "true" ]; then
+            ARGS="$ARGS --full-history"
+          fi
+          npm run sync:fftt -- $ARGS

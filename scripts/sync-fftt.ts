@@ -226,8 +226,8 @@ async function syncTeamsAndMatches() {
   console.log(`✅ ${matchesCount} matchs mis à jour dans Supabase.`);
 }
 
-async function syncIndividualStats() {
-  console.log("--- Sync Stats Individuelles (Parties & Classements) ---");
+async function syncIndividualStats(fullHistory: boolean = false) {
+  console.log(`--- Sync Stats Individuelles (Parties & Classements) ${fullHistory ? '[FULL HISTORY]' : '[DELTA]'} ---`);
   if (!supabase) return;
 
   const { data: dbPlayers, error: dbPlayersError } = await supabase.from('players').select('license_number');
@@ -239,8 +239,22 @@ async function syncIndividualStats() {
   for (const player of dbPlayers) {
     const licence = player.license_number;
     
-    // 1. Fetch parties (using xml_partie_mysql to get historical matches)
-    const resultPartie = await fetchFromFftt('xml_partie_mysql', { licence });
+    // Check if player already has matches to decide which API to use
+    const { data: existingMatches } = await supabase
+      .from('player_matches')
+      .select('id')
+      .eq('license_number', licence)
+      .limit(1);
+      
+    const isNewPlayer = !existingMatches || existingMatches.length === 0;
+    
+    // Si c'est un nouveau joueur ou si on demande un full history, on utilise l'API mysql
+    const useMysql = fullHistory || isNewPlayer;
+    const endpoint = useMysql ? 'xml_partie_mysql' : 'xml_partie';
+    const params = useMysql ? { licence } : { numlic: licence };
+    
+    // 1. Fetch parties
+    const resultPartie = await fetchFromFftt(endpoint, params);
     if (resultPartie?.liste?.partie) {
       const parties = Array.isArray(resultPartie.liste.partie) ? resultPartie.liste.partie : [resultPartie.liste.partie];
       const formattedMatches = [];
@@ -317,11 +331,12 @@ async function syncIndividualStats() {
 async function main() {
   const args = process.argv.slice(2);
   const runAll = args.length === 0 || args.includes('--all');
+  const fullHistory = args.includes('--full-history');
   
   if (runAll || args.includes('--club')) await syncClub();
   if (runAll || args.includes('--players')) await syncPlayers();
   if (runAll || args.includes('--teams') || args.includes('--matches')) await syncTeamsAndMatches();
-  if (runAll || args.includes('--stats')) await syncIndividualStats();
+  if (runAll || args.includes('--stats') || fullHistory) await syncIndividualStats(fullHistory);
 }
 
 main();
