@@ -24,10 +24,11 @@ export default function Footer() {
             <h4 className="text-lg font-black uppercase text-white mb-4 border-b-2 border-zinc-800 pb-2">Navigation</h4>
             <ul className="space-y-2 text-sm font-medium">
               <li><Link href="/" className="hover:text-accent-yellow transition-colors">Accueil</Link></li>
-              <li><Link href="/club" className="hover:text-accent-yellow transition-colors">La vie du club</Link></li>
-              <li><Link href="/equipes" className="hover:text-accent-yellow transition-colors">Les équipes</Link></li>
-              <li><Link href="/inscriptions" className="hover:text-accent-yellow transition-colors">Inscriptions & infos</Link></li>
-              <li><Link href="/medias" className="hover:text-accent-yellow transition-colors">Photos & vidéos</Link></li>
+              <li><Link href="/club" className="hover:text-accent-yellow transition-colors">Le Club</Link></li>
+              <li><Link href="/saison" className="hover:text-accent-yellow transition-colors">La Saison</Link></li>
+              <li><Link href="/joueurs" className="hover:text-accent-yellow transition-colors">Les Joueurs</Link></li>
+              <li><Link href="/inscriptions" className="hover:text-accent-yellow transition-colors">Inscriptions</Link></li>
+              <li><Link href="/medias" className="hover:text-accent-yellow transition-colors">Médias</Link></li>
               <li><Link href="/contact" className="hover:text-accent-yellow transition-colors">Contact</Link></li>
             </ul>
           </div>
@@ -48,6 +49,7 @@ export default function Footer() {
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/50">
           <p>&copy; {new Date().getFullYear()} Arras TT. Tous droits réservés.</p>
           <div className="flex gap-4 flex-wrap justify-center">
+            <Link href="/partenaires" className="hover:text-white transition-colors">Partenaires</Link>
             <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions Légales</Link>
             <Link href="/confidentialite" className="hover:text-white transition-colors">Confidentialité</Link>
             <Link href="/cgu" className="hover:text-white transition-colors">CGU</Link>

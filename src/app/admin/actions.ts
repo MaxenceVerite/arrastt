@@ -3,14 +3,16 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function loginAdmin(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  const supabase = await createClient();
+  // Use the admin client to query the admins table securely since it's protected by RLS
+  const adminClient = createAdminClient();
   
-  const { data: admin, error } = await supabase
+  const { data: admin, error } = await adminClient
     .from("admins")
     .select("*")
     .eq("email", email)
@@ -51,10 +53,11 @@ export async function updateSiteContent(sectionKey: string, content: any) {
     throw new Error("Non autorisé");
   }
 
-  const supabase = await createClient();
+  // Use the admin client to bypass RLS securely from the server
+  const adminClient = createAdminClient();
   
   // Upsert the content
-  const { error } = await supabase
+  const { error } = await adminClient
     .from("site_content")
     .upsert({ 
       section_key: sectionKey, 

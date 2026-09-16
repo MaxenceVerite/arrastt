@@ -3,17 +3,22 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 
-export default function ClubCarousel() {
+export default function ClubCarousel({ images: initialImages = [] }: { images?: any[] }) {
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const images = [
-    "/medias/devanture_salle_vandamme.jpg",
-    "/medias/image_club_arrastt_1.jpg",
-    "/medias/image_club_arrastt_2.jpg",
-    "/medias/image_club_arrastt_3.jpg",
-    "/medias/image_club_arrastt_4.jpg",
+  // Parse images for backward compatibility and fallback
+  const fallbackImages = [
+    { url: "/medias/devanture_salle_vandamme.jpg", caption: "" },
+    { url: "/medias/image_club_arrastt_1.jpg", caption: "" },
+    { url: "/medias/image_club_arrastt_2.jpg", caption: "" },
+    { url: "/medias/image_club_arrastt_3.jpg", caption: "" },
+    { url: "/medias/image_club_arrastt_4.jpg", caption: "" },
   ];
+
+  const parsedImages = initialImages.length > 0 
+    ? initialImages.map(img => typeof img === 'string' ? { url: img, caption: "" } : img)
+    : fallbackImages;
 
   const scrollLeft = () => {
     if (carouselRef.current) {
@@ -53,27 +58,28 @@ export default function ClubCarousel() {
         </div>
         
         <div ref={carouselRef} className="w-full flex overflow-x-auto snap-x snap-mandatory pb-8 px-4 sm:px-6 lg:px-8 hide-scrollbar gap-6 scroll-smooth">
-          {images.map((src, i) => (
+          {parsedImages.map((item, i) => (
             <div 
               key={i} 
-              onClick={() => setSelectedMedia(src)}
+              onClick={() => setSelectedMedia(item.url)}
               className="relative w-[85vw] sm:w-[60vw] md:w-[40vw] lg:w-[30vw] aspect-[4/3] flex-shrink-0 snap-center rounded-2xl overflow-hidden border-2 border-white/10 group cursor-pointer hover:border-accent-yellow transition-colors"
             >
               <Image 
-                src={src} 
+                src={item.url} 
                 alt={`Photo du club ${i + 1}`} 
                 fill 
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity"></div>
-              <div className="absolute bottom-6 left-6 right-6">
-                <span className="text-accent-yellow text-xs font-black tracking-widest uppercase">Arras TT</span>
-                <p className="text-white font-bold text-lg mt-1 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-between">
-                  Ambiance de salle
-                  <svg className="w-6 h-6 text-accent-yellow" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
-                </p>
-              </div>
+              {item.caption && (
+                <div className="absolute bottom-6 left-6 right-6">
+                  <p className="text-white font-bold text-lg transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-between">
+                    {item.caption}
+                    <svg className="w-6 h-6 text-accent-yellow" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>

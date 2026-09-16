@@ -7,6 +7,15 @@ import { createClient } from "@/utils/supabase/server";
 export default async function ClubPage() {
   const supabase = await createClient();
   const { data: clubInfo } = await supabase.from('club_info').select('*').single();
+  
+  // Fetch club carousel images
+  const { data: clubCarouselData } = await supabase
+    .from('site_content')
+    .select('content')
+    .eq('section_key', 'club_carousel')
+    .single();
+    
+  const carouselImages = clubCarouselData?.content || [];
 
   return (
     <div className="flex flex-col w-full bg-background overflow-x-hidden">
@@ -16,7 +25,7 @@ export default async function ClubPage() {
       <section className="relative w-full bg-primary-dark border-b-[8px] border-accent-yellow py-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter mb-6">
-            La Vie du <span className="text-accent-yellow">Club</span>
+            Le <span className="text-accent-yellow">Club</span>
           </h1>
           <p className="text-white/80 text-xl max-w-2xl mx-auto font-medium">
             Découvrez l'histoire, les installations et les personnes qui font battre le cœur d'Arras TT au quotidien.
@@ -79,9 +88,12 @@ export default async function ClubPage() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 {[
-                  { role: "Président", name: "David L." },
-                  { role: "Secrétaire", name: "Marie D." },
-                  { role: "Trésorier", name: "Thomas R." },
+                  { role: "PRÉSIDENTE", name: "ELISE DECHERF" },
+                  { role: "VICE-PRÉSIDENT", name: "FREDERIC MERCIER" },
+                  { role: "VICE-PRÉSIDENT", name: "HERVE RYCZKO" },
+                  { role: "VICE-PRÉSIDENTE", name: "SABRINA VIGNIER DIT VIGNY" },
+                  { role: "TRÉSORIER", name: "GEORGES LAMBECQ" },
+                  { role: "SECRÉTAIRE", name: "ERIC OLIVIER" },
                 ].map((member, i) => (
                   <div key={i} className="bg-white border-2 border-zinc-200 p-6 flex flex-col items-center text-center hover:border-accent-purple transition-colors shadow-sm">
                     <div className="w-20 h-20 bg-zinc-200 rounded-full mb-4 flex items-center justify-center text-zinc-400">
@@ -138,7 +150,7 @@ export default async function ClubPage() {
       </section>
 
       {/* UX Friendly Carousel Component (Client Side) */}
-      <ClubCarousel />
+      <ClubCarousel images={carouselImages} />
       
       {/* Hide scrollbar styles embedded for convenience */}
       <style dangerouslySetInnerHTML={{__html: `

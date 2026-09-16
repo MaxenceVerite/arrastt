@@ -1,20 +1,60 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MediaLibraryModal from "@/components/admin/MediaLibraryModal";
+import { getNewsById, updateNews } from "../actions";
+import { useRouter } from "next/navigation";
 
 export default function AdminNewsEdit({ params }: { params: { id: string } }) {
-  // In a real app, you would fetch the news item by params.id from Supabase here
-  const [title, setTitle] = useState("Victoire de l'équipe 1");
-  const [category, setCategory] = useState("Résultats");
-  const [content, setContent] = useState("C'est une belle victoire pour notre équipe première qui s'impose 8-6 lors de cette journée.");
-  const [image, setImage] = useState<string | null>("/medias/image_club_arrastt_2.jpg");
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("results");
+  const [content, setContent] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [image, setImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const newsItem = await getNewsById(params.id);
+        if (newsItem) {
+          setTitle(newsItem.title);
+          setCategory(newsItem.category);
+          setContent(newsItem.content);
+          setImage(newsItem.image_url);
+          setIsFeatured(newsItem.is_featured);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      setIsLoading(false);
+    }
+    load();
+  }, [params.id]);
 
   const handleSelectMedia = (url: string) => {
     setImage(url);
   };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !content) return alert("Le titre et le contenu sont requis");
+    
+    setIsSaving(true);
+    const result = await updateNews(params.id, { title, category, content, image_url: image, is_featured: isFeatured });
+    if (result.success) {
+      router.push("/admin/news");
+    } else {
+      alert(result.error);
+      setIsSaving(false);
+    }
+  };
+
+  if (isLoading) return <div className="p-8 text-center font-bold">Chargement...</div>;
 
   return (
     <div className="max-w-4xl mx-auto pb-12">
@@ -28,7 +68,7 @@ export default function AdminNewsEdit({ params }: { params: { id: string } }) {
         </Link>
       </div>
 
-      <form className="bg-white p-8 border-4 border-primary-dark shadow-[8px_8px_0px_0px_rgba(10,45,108,1)] flex flex-col gap-6">
+      <form onSubmit={handleSave} className="bg-white p-8 border-4 border-primary-dark shadow-[8px_8px_0px_0px_rgba(10,45,108,1)] flex flex-col gap-6">
         
         <div>
           <label className="block text-sm font-bold text-primary-dark uppercase mb-2">Titre de l'actualité</label>
@@ -41,6 +81,20 @@ export default function AdminNewsEdit({ params }: { params: { id: string } }) {
           />
         </div>
 
+        <div className="flex items-center gap-3 bg-zinc-50 p-4 border-2 border-zinc-200">
+          <input 
+            type="checkbox" 
+            id="isFeatured"
+            checked={isFeatured}
+            onChange={(e) => setIsFeatured(e.target.checked)}
+            className="w-6 h-6 accent-accent-yellow cursor-pointer"
+          />
+          <label htmlFor="isFeatured" className="font-bold text-primary-dark uppercase cursor-pointer flex items-center gap-2">
+            Mettre "À la une" <span className="text-accent-yellow text-xl">★</span>
+          </label>
+          <p className="text-sm text-zinc-500 font-medium ml-4">Cette actualité s'affichera en premier sur la page d'accueil.</p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-bold text-primary-dark uppercase mb-2">Catégorie</label>
@@ -49,9 +103,9 @@ export default function AdminNewsEdit({ params }: { params: { id: string } }) {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full p-4 border-2 border-zinc-300 focus:border-primary focus:outline-none transition-colors font-medium appearance-none bg-white"
             >
-              <option>Résultats</option>
-              <option>Tournoi</option>
-              <option>Vie du club</option>
+              <option value="results">Résultats</option>
+              <option value="tournament">Tournoi</option>
+              <option value="general">Vie du club</option>
             </select>
           </div>
           <div>
@@ -81,8 +135,8 @@ export default function AdminNewsEdit({ params }: { params: { id: string } }) {
         </div>
 
         <div className="pt-4 border-t border-zinc-200 flex justify-end">
-          <button type="button" className="bg-primary-dark text-white font-black uppercase px-8 py-4 shadow-[4px_4px_0px_0px_rgba(255,226,138,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,226,138,1)] transition-all">
-            Enregistrer les modifications
+          <button type="submit" disabled={isSaving} className="bg-primary-dark text-white font-black uppercase px-8 py-4 shadow-[4px_4px_0px_0px_rgba(255,226,138,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(255,226,138,1)] transition-all disabled:opacity-50">
+            {isSaving ? "Enregistrement..." : "Enregistrer les modifications"}
           </button>
         </div>
       </form>

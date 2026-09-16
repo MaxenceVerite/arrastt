@@ -7,9 +7,30 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: matches } = await supabase.from('team_matches').select('*, teams(name)').order('match_date', { ascending: false });
   
+  const { data: partnersData } = await supabase.from("site_content").select("content").eq("section_key", "partners").single();
+  const partners = partnersData?.content ? (partnersData.content as any[]) : [];
+  
   const now = new Date();
   const recentMatches = matches?.filter(m => m.match_date && new Date(m.match_date) < now).slice(0, 5) || [];
   const upcomingHomeMatches = matches?.filter(m => m.match_date && new Date(m.match_date) >= now && m.is_home).sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime()).slice(0, 5) || [];
+
+  const { data: allNews } = await supabase
+    .from('news')
+    .select('*, news_comments(count)')
+    .order('is_featured', { ascending: false })
+    .order('published_at', { ascending: false });
+
+  const featuredNews = allNews && allNews.length > 0 ? allNews[0] : null;
+  const remainingNews = allNews && allNews.length > 1 ? allNews.slice(1, 6) : [];
+
+  const formatCategory = (cat: string) => {
+    switch (cat) {
+      case 'results': return 'Résultats';
+      case 'tournament': return 'Tournoi';
+      case 'general': return 'Vie du club';
+      default: return cat;
+    }
+  };
 
   return (
     <div className="flex flex-col w-full bg-background overflow-x-hidden">
@@ -68,6 +89,7 @@ export default async function Home() {
           <div className="lg:col-span-8 flex flex-col gap-12">
             
             {/* A LA UNE */}
+            {featuredNews && (
             <div id="actualites">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-4 h-12 bg-accent-yellow"></div>
@@ -76,22 +98,43 @@ export default async function Home() {
               
               <div className="bg-white border-2 border-primary-dark shadow-[8px_8px_0px_0px_rgba(10,45,108,1)] group overflow-hidden flex flex-col md:flex-row">
                 <div className="md:w-1/2 bg-zinc-200 aspect-video md:aspect-auto relative border-b-2 md:border-b-0 md:border-r-2 border-primary-dark">
-                  {/* Image placeholder */}
-                  <div className="absolute inset-0 bg-primary/20"></div>
-                  <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-                    <span className="font-black text-3xl text-primary-dark rotate-[-5deg]">Nouveau Planning</span>
-                  </div>
+                  {featuredNews.image_url ? (
+                    <Image src={featuredNews.image_url} alt={featuredNews.title} fill className="object-cover" />
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-primary/20"></div>
+                      <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+                        <span className="font-black text-3xl text-primary-dark rotate-[-5deg]">{featuredNews.title}</span>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="md:w-1/2 p-8 flex flex-col justify-center bg-white">
-                  <span className="inline-block bg-accent-purple text-white text-xs font-bold px-3 py-1 uppercase tracking-widest w-max mb-4">Annonce</span>
-                  <h3 className="text-2xl font-black text-primary-dark leading-tight mb-4 group-hover:text-primary transition-colors">Changements d'horaires pour les jeunes</h3>
-                  <p className="text-foreground/70 font-medium mb-6">L'entraînement du lundi passe au mardi, à 19h au lieu de 18h30. Merci de prendre note de ces modifications pour la saison.</p>
-                  <Link href="/actualites/planning" className="font-bold text-primary flex items-center gap-2 hover:gap-4 transition-all">
+                <div className="md:w-1/2 p-8 flex flex-col justify-center bg-white relative">
+                  {featuredNews.is_featured && (
+                    <div className="absolute top-4 right-4 text-accent-yellow text-4xl" title="À la une">★</div>
+                  )}
+                  <span className="inline-block bg-accent-purple text-white text-xs font-bold px-3 py-1 uppercase tracking-widest w-max mb-4">
+                    {formatCategory(featuredNews.category)}
+                  </span>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-zinc-500 text-sm font-bold flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                      {featuredNews.news_comments?.[0]?.count || 0}
+                    </span>
+                  </div>
+                  <h3 className="text-2xl font-black text-primary-dark leading-tight mb-4 group-hover:text-primary transition-colors">
+                    {featuredNews.title}
+                  </h3>
+                  <p className="text-foreground/70 font-medium mb-6 line-clamp-3">
+                    {featuredNews.content}
+                  </p>
+                  <Link href={`/actualites/${featuredNews.slug}`} className="font-bold text-primary flex items-center gap-2 hover:gap-4 transition-all">
                     Lire la suite <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                   </Link>
                 </div>
               </div>
             </div>
+            )}
 
             {/* FIL D'ACTUALITÉS COMPLET */}
             <div>
@@ -101,29 +144,35 @@ export default async function Home() {
               </div>
               
               <div className="flex flex-col gap-6">
-                {[
-                  { title: "Assemblée Générale 2026", desc: "Retour sur les points clés de notre AG annuelle et les objectifs pour la saison à venir.", date: "10 Septembre 2026", cat: "Infos" },
-                  { title: "Nouveaux maillots", desc: "La commande des nouveaux maillots Arras TT est ouverte ! Découvrez le design officiel.", date: "02 Septembre 2026", cat: "Boutique" },
-                  { title: "Stage de perfectionnement Jeunes", desc: "Félicitations à tous les participants du stage de la Toussaint organisé par David.", date: "25 Août 2026", cat: "Stage" },
-                  { title: "Fermeture Salle Vandamme", desc: "La salle sera exceptionnellement fermée ce week-end pour cause de travaux électriques.", date: "12 Août 2026", cat: "Infos" },
-                  { title: "Résultats Championnat de France", desc: "Superbe parcours de nos joueurs lors des championnats de France. L'équipe 1 se maintient !", date: "15 Juin 2026", cat: "Résultats" }
-                ].map((news, i) => (
-                  <div key={i} className="border-l-8 border-primary bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all flex flex-col md:flex-row gap-6">
+                {remainingNews.map((news) => (
+                  <div key={news.id} className="border-l-8 border-primary bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all flex flex-col md:flex-row gap-6 relative">
+                     {news.is_featured && (
+                        <div className="absolute top-2 right-2 text-accent-yellow text-2xl" title="À la une">★</div>
+                     )}
                      <div className="md:w-32 flex-shrink-0 border-b-2 md:border-b-0 md:border-r-2 border-zinc-100 pb-4 md:pb-0 md:pr-4">
-                        <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block mb-2">{news.date}</span>
-                        <span className="bg-primary/10 text-primary-dark font-black text-xs uppercase px-3 py-1 inline-block">{news.cat}</span>
+                        <span className="text-xs font-black text-zinc-400 uppercase tracking-widest block mb-2">{new Date(news.published_at).toLocaleDateString('fr-FR')}</span>
+                        <span className="bg-primary/10 text-primary-dark font-black text-xs uppercase px-3 py-1 inline-block mb-3">{formatCategory(news.category)}</span>
+                        <div className="flex items-center gap-1 text-zinc-500 text-xs font-bold">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
+                          {news.news_comments?.[0]?.count || 0}
+                        </div>
                      </div>
                      <div className="flex-grow">
-                        <h3 className="text-xl font-black text-primary-dark mb-2 leading-tight hover:text-primary transition-colors cursor-pointer">
-                          <Link href={`/actualites/${news.title.toLowerCase().replace(/ /g, '-')}`}>{news.title}</Link>
+                        <h3 className="text-xl font-black text-primary-dark mb-2 leading-tight hover:text-primary transition-colors cursor-pointer pr-6">
+                          <Link href={`/actualites/${news.slug}`}>{news.title}</Link>
                         </h3>
-                        <p className="text-foreground/80 font-medium mb-4">{news.desc}</p>
-                        <Link href={`/actualites/${news.title.toLowerCase().replace(/ /g, '-')}`} className="font-black text-primary flex items-center gap-2 hover:gap-4 transition-all uppercase text-xs tracking-wider">
+                        <p className="text-foreground/80 font-medium mb-4 line-clamp-2">{news.content}</p>
+                        <Link href={`/actualites/${news.slug}`} className="font-black text-primary flex items-center gap-2 hover:gap-4 transition-all uppercase text-xs tracking-wider">
                           Lire la suite <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                         </Link>
                      </div>
                   </div>
                 ))}
+                {remainingNews.length === 0 && !featuredNews && (
+                  <div className="p-8 text-center bg-white border-2 border-zinc-200">
+                    <p className="text-zinc-500 font-bold">Aucune actualité pour le moment.</p>
+                  </div>
+                )}
               </div>
               
               <div className="flex justify-center mt-8">
@@ -241,18 +290,27 @@ export default async function Home() {
         
         {/* Infinite Marquee Container */}
         <div className="relative flex w-full overflow-hidden whitespace-nowrap">
-          {/* Inner scrolling track (duplicated content for seamless loop) */}
-          <div className="animate-marquee flex whitespace-nowrap items-center w-[200%]">
-            {[1, 2].map((loop) => (
-              <div key={loop} className="flex items-center justify-around w-1/2 opacity-60 hover:opacity-100 grayscale hover:grayscale-0 transition-all duration-300 gap-16 px-8">
-                <div className="font-black text-3xl tracking-tighter">VILLE D'ARRAS</div>
-                <div className="font-black text-2xl italic text-primary">SPORTSREGIONS</div>
-                <div className="font-black text-2xl text-accent-purple">PAS-DE-CALAIS</div>
-                <div className="font-black text-2xl uppercase border-2 border-black px-4 py-1">Service Civique</div>
-                <div className="font-black text-3xl tracking-wider text-zinc-400">CORA</div>
-              </div>
-            ))}
-          </div>
+          {partners.length > 0 && (
+            <div className="animate-marquee flex whitespace-nowrap items-center w-[200%]">
+              {[1, 2].map((loop) => (
+                <div key={loop} className="flex items-center justify-around w-1/2 gap-16 px-8">
+                  {partners.map((partner) => (
+                    <Link 
+                      key={partner.id} 
+                      href={`/partenaires#partner-${partner.id}`}
+                      className="opacity-60 hover:opacity-100 transition-all duration-300 flex items-center justify-center relative h-16 w-32"
+                    >
+                      {partner.image ? (
+                        <Image src={partner.image} alt={partner.title} fill className="object-contain" sizes="128px" />
+                      ) : (
+                        <div className="font-black text-xl tracking-tighter truncate w-full text-center">{partner.title}</div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -14,7 +14,7 @@ const FFTT_CLUB_ID = process.env.FFTT_CLUB_ID || "07620031";
 
 // Supabase Configuration
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.warn("⚠️ Attention : NEXT_PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY manquant. L'insertion en base sera ignorée.");
@@ -54,7 +54,8 @@ async function fetchFromFftt(endpoint: string, params: Record<string, string> = 
   console.log(`Fetching ${endpoint}...`);
   try {
     const response = await fetch(url);
-    const xmlText = await response.text();
+    const arrayBuffer = await response.arrayBuffer();
+    const xmlText = new TextDecoder('iso-8859-1').decode(arrayBuffer);
     return await parseStringPromise(xmlText, { explicitArray: false });
   } catch (err) {
     console.error(`Erreur sur l'API FFTT (${endpoint}) :`, err);

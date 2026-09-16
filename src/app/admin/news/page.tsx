@@ -1,24 +1,51 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getNews, deleteNews } from "./actions";
 
 export default function AdminNewsList() {
-  const [newsList, setNewsList] = useState([
-    { id: 1, title: "Victoire de l'équipe 1", date: "15 Oct 2026", category: "Résultats" },
-    { id: 2, title: "Tournoi de rentrée", date: "02 Sep 2026", category: "Tournoi" },
-  ]);
+  const [newsList, setNewsList] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleDelete = (id: number) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette actualité ?")) {
-      // In a real app, delete from Supabase
-      setNewsList(newsList.filter(news => news.id !== id));
+  const formatCategory = (cat: string) => {
+    switch (cat) {
+      case 'results': return 'Résultats';
+      case 'tournament': return 'Tournoi';
+      case 'general': return 'Vie du club';
+      default: return cat;
     }
   };
 
-  const handleEdit = () => {
-    alert("Ici s'ouvrira la page d'édition pré-remplie avec le contenu de l'article.");
+  useEffect(() => {
+    loadNews();
+  }, []);
+
+  const loadNews = async () => {
+    setIsLoading(true);
+    try {
+      const data = await getNews();
+      setNewsList(data || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoading(false);
   };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette actualité ?")) {
+      const res = await deleteNews(id);
+      if (res.success) {
+        setNewsList(newsList.filter(news => news.id !== id));
+      } else {
+        alert(res.error);
+      }
+    }
+  };
+
+  if (isLoading) {
+    return <div className="p-8 text-center font-bold">Chargement...</div>;
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -50,11 +77,14 @@ export default function AdminNewsList() {
             )}
             {newsList.map((news) => (
               <tr key={news.id} className="border-b border-zinc-200 hover:bg-zinc-50 font-medium">
-                <td className="p-4 text-primary-dark font-bold">{news.title}</td>
-                <td className="p-4">
-                  <span className="bg-primary/10 text-primary px-3 py-1 text-xs font-black uppercase">{news.category}</span>
+                <td className="p-4 text-primary-dark font-bold">
+                  {news.is_featured && <span className="text-accent-yellow mr-2" title="À la une">★</span>}
+                  {news.title}
                 </td>
-                <td className="p-4 text-zinc-500">{news.date}</td>
+                <td className="p-4">
+                  <span className="bg-primary/10 text-primary px-3 py-1 text-xs font-black uppercase">{formatCategory(news.category)}</span>
+                </td>
+                <td className="p-4 text-zinc-500">{new Date(news.published_at).toLocaleDateString("fr-FR")}</td>
                 <td className="p-4 text-right space-x-2">
                   <Link href={`/admin/news/edit/${news.id}`} className="text-blue-500 font-bold hover:underline">Éditer</Link>
                   <button onClick={() => handleDelete(news.id)} className="text-red-500 font-bold hover:underline ml-2">Supprimer</button>

@@ -8,10 +8,11 @@ export default function NavLinks() {
 
   const links = [
     { name: "Accueil", href: "/" },
-    { name: "La vie du club", href: "/club" },
-    { name: "L'Équipe", href: "/equipe" },
-    { name: "Inscriptions & infos", href: "/inscriptions" },
-    { name: "Photos & vidéos", href: "/medias" },
+    { name: "Le Club", href: "/club" },
+    { name: "La Saison", href: "/saison" },
+    { name: "Les Joueurs", href: "/joueurs" },
+    { name: "Inscriptions", href: "/inscriptions" },
+    { name: "Médias", href: "/medias" },
     { name: "Contact", href: "/contact" },
   ];
 

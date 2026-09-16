@@ -1,24 +1,43 @@
 import Image from "next/image";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import CommentForm from "@/components/news/CommentForm";
 
 export default async function ArticleDetail({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const slug = resolvedParams.slug || "Article";
+  const slug = resolvedParams.slug;
   const decodedSlug = decodeURIComponent(slug);
 
-  // Mock data for the article. In a real app, fetch from Supabase based on slug
-  const article = {
-    title: decodedSlug.replace(/-/g, " "),
-    category: "Club",
-    date: "14 Septembre 2026",
-    content: `
-      C'est une excellente nouvelle pour le club, les efforts portent leurs fruits ! Lors du dernier rassemblement, nos équipes ont montré une détermination sans faille. 
-      <br/><br/>
-      Dès le début de la compétition, l'ambiance était électrique. Les joueurs se sont surpassés, soutenus par un public toujours aussi fervent. Nous remercions particulièrement les coachs qui ont fait un travail formidable tout au long de la semaine pour préparer physiquement et mentalement nos compétiteurs.
-      <br/><br/>
-      La suite de la saison s'annonce prometteuse. Restez connectés pour suivre les prochains résultats, et n'oubliez pas de venir encourager l'équipe 1 le week-end prochain à la Salle Vandamme !
-    `,
-    image: "/medias/image_club_arrastt_1.jpg",
+  const supabase = await createClient();
+  
+  // Fetch news
+  const { data: article } = await supabase
+    .from("news")
+    .select("*")
+    .eq("slug", decodedSlug)
+    .single();
+
+  if (!article) {
+    notFound();
+  }
+
+  // Fetch comments
+  const { data: comments } = await supabase
+    .from("news_comments")
+    .select("*, profiles(first_name, last_name)")
+    .eq("news_id", article.id)
+    .order("created_at", { ascending: true });
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const formatCategory = (cat: string) => {
+    switch (cat) {
+      case 'results': return 'Résultats';
+      case 'tournament': return 'Tournoi';
+      case 'general': return 'Vie du club';
+      default: return cat;
+    }
   };
 
   return (
@@ -36,8 +55,8 @@ export default async function ArticleDetail({ params }: { params: Promise<{ slug
              <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest text-white">
                 <Link href="/" className="hover:text-accent-yellow transition-colors">Accueil</Link>
                 <span className="text-zinc-500">/</span>
-                <span className="bg-primary/20 text-primary px-3 py-1">{article.category}</span>
-                <span className="text-zinc-400">{article.date}</span>
+                <span className="bg-primary/20 text-primary px-3 py-1">{formatCategory(article.category)}</span>
+                <span className="text-zinc-400">{new Date(article.published_at).toLocaleDateString('fr-FR')}</span>
              </div>
              
              <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-tight drop-shadow-lg capitalize">
@@ -53,9 +72,11 @@ export default async function ArticleDetail({ params }: { params: Promise<{ slug
         <div className="max-w-4xl mx-auto flex flex-col gap-12">
           
           {/* Main Image */}
-          <div className="w-full aspect-[21/9] relative border-4 border-primary-dark shadow-[12px_12px_0px_0px_rgba(255,226,138,1)] overflow-hidden">
-             <Image src={article.image} alt={article.title} fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
-          </div>
+          {article.image_url && (
+            <div className="w-full aspect-[21/9] relative border-4 border-primary-dark shadow-[12px_12px_0px_0px_rgba(255,226,138,1)] overflow-hidden">
+               <Image src={article.image_url} alt={article.title} fill sizes="(max-width: 768px) 100vw, 800px" className="object-cover" />
+            </div>
+          )}
 
           {/* Text Content */}
           <div 
@@ -63,16 +84,39 @@ export default async function ArticleDetail({ params }: { params: Promise<{ slug
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
-          {/* Call to action / Footer of article */}
-          <div className="border-t-4 border-zinc-200 pt-8 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-             <div className="flex items-center gap-4">
-               <span className="font-bold text-primary-dark uppercase">Partager :</span>
-               <button className="w-10 h-10 bg-primary-dark text-white rounded-full flex items-center justify-center hover:bg-primary transition-colors">f</button>
-               <button className="w-10 h-10 bg-primary-dark text-white rounded-full flex items-center justify-center hover:bg-primary transition-colors">X</button>
-             </div>
-             <Link href="/#actualites" className="font-black text-primary uppercase hover:underline">
-               ← Retour aux actualités
-             </Link>
+          {/* Comments Section */}
+          <div className="mt-12 pt-8 border-t-4 border-zinc-200">
+            <h2 className="text-3xl font-black text-primary-dark uppercase mb-8">Commentaires ({comments?.length || 0})</h2>
+            
+            <div className="flex flex-col gap-6">
+              {comments?.map((comment) => (
+                <div key={comment.id} className="bg-white p-6 border-2 border-zinc-100 shadow-sm flex flex-col gap-2">
+                  <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                    <span className="font-bold text-primary-dark uppercase">
+                      {(comment.profiles as any)?.first_name} {(comment.profiles as any)?.last_name}
+                    </span>
+                    <span className="text-xs font-bold text-zinc-400">
+                      {new Date(comment.created_at).toLocaleDateString('fr-FR')} à {new Date(comment.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-foreground/80 font-medium whitespace-pre-wrap mt-2">{comment.content}</p>
+                </div>
+              ))}
+              {comments?.length === 0 && (
+                <p className="text-zinc-500 font-medium italic">Aucun commentaire pour le moment. Soyez le premier !</p>
+              )}
+            </div>
+
+            {user ? (
+              <CommentForm newsId={article.id} />
+            ) : (
+              <div className="mt-8 p-6 bg-zinc-50 border-2 border-zinc-200 text-center flex flex-col items-center gap-4">
+                <p className="font-bold text-primary-dark uppercase">Veuillez vous connecter pour laisser un commentaire.</p>
+                <Link href="/login" className="bg-accent-yellow text-primary-dark font-black uppercase px-6 py-3 shadow-[4px_4px_0px_0px_rgba(24,115,211,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(24,115,211,1)] transition-all">
+                  Se connecter
+                </Link>
+              </div>
+            )}
           </div>
 
         </div>

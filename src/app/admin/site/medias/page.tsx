@@ -6,24 +6,22 @@ import { updateSiteContent } from "../../actions";
 import MediaLibraryModal from "@/components/admin/MediaLibraryModal";
 import { createClient } from "@/utils/supabase/client";
 
-import { MediaItem } from "../medias/page";
+export type MediaItem = { url: string; caption: string };
 
-export default function AdminSiteClubCMS() {
+export default function AdminSiteMediasCMS() {
   const [carouselImages, setCarouselImages] = useState<MediaItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
-  const [dragOverItemIndex, setDragOverItemIndex] = useState<number | null>(null);
 
   const supabase = createClient();
 
   useEffect(() => {
-    async function loadClub() {
+    async function loadMedias() {
       const { data } = await supabase
         .from('site_content')
         .select('content')
-        .eq('section_key', 'club_carousel')
+        .eq('section_key', 'medias_page_images')
         .single();
         
       if (data && data.content) {
@@ -44,7 +42,7 @@ export default function AdminSiteClubCMS() {
       }
       setIsLoading(false);
     }
-    loadClub();
+    loadMedias();
   }, [supabase]);
 
   const removeImage = (index: number) => {
@@ -63,33 +61,9 @@ export default function AdminSiteClubCMS() {
     });
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedItemIndex(index);
-  };
-
-  const handleDragEnter = (index: number) => {
-    setDragOverItemIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    if (draggedItemIndex !== null && dragOverItemIndex !== null && draggedItemIndex !== dragOverItemIndex) {
-      const newImages = [...carouselImages];
-      const draggedItem = newImages[draggedItemIndex];
-      newImages.splice(draggedItemIndex, 1);
-      newImages.splice(dragOverItemIndex, 0, draggedItem);
-      setCarouselImages(newImages);
-    }
-    setDraggedItemIndex(null);
-    setDragOverItemIndex(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
   const handleSave = async () => {
     setIsSaving(true);
-    const result = await updateSiteContent('club_carousel', carouselImages);
+    const result = await updateSiteContent('medias_page_images', carouselImages);
     
     if (result.success) {
       alert("Modifications enregistrées. Le site public a été mis à jour !");
@@ -117,34 +91,16 @@ export default function AdminSiteClubCMS() {
       </div>
 
       <div className="bg-white p-8 border-4 border-primary-dark shadow-[8px_8px_0px_0px_rgba(10,45,108,1)] mb-8">
-        <h2 className="text-2xl font-black text-primary-dark uppercase mb-2">Carrousel "Le Club"</h2>
+        <h2 className="text-2xl font-black text-primary-dark uppercase mb-2">Images "Médias"</h2>
         <p className="text-foreground/80 font-medium mb-6">
-          Ces images s'affichent sur la page publique <strong>/club</strong>. Cliquez sur le X pour en retirer une, ou ajoutez-en depuis la médiathèque.
+          Ces images s'affichent sur la page publique <strong>/medias</strong>. Cliquez sur le X pour en retirer une, ou ajoutez-en depuis la médiathèque. L'ordre défini ici sera respecté sur la page.
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
           {carouselImages.map((item, i) => (
-            <div 
-              key={i} 
-              draggable
-              onDragStart={() => handleDragStart(i)}
-              onDragEnter={() => handleDragEnter(i)}
-              onDragEnd={handleDragEnd}
-              onDragOver={handleDragOver}
-              className={`flex flex-col gap-2 relative group cursor-move transition-transform ${draggedItemIndex === i ? 'opacity-50' : ''} ${dragOverItemIndex === i ? 'border-primary' : 'border-zinc-200'}`}
-            >
-              <div className={`relative aspect-[4/3] border-4 ${dragOverItemIndex === i ? 'border-primary' : 'border-zinc-200'}`}>
+            <div key={i} className="flex flex-col gap-2 relative group">
+              <div className="relative aspect-[4/3] border-4 border-zinc-200">
                 <Image src={item.url} alt={`Image ${i}`} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover" />
-                
-                {/* Overlay indicateur de drag */}
-                {dragOverItemIndex === i && (
-                  <div className="absolute inset-0 bg-primary/20 z-10 flex items-center justify-center">
-                    <div className="bg-primary text-white p-2 rounded-full">
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                    </div>
-                  </div>
-                )}
-                
                 <button 
                   onClick={() => removeImage(i)}
                   className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 text-white font-black rounded-full border-2 border-white shadow-md hover:scale-110 transition-transform flex items-center justify-center opacity-0 group-hover:opacity-100 z-10"

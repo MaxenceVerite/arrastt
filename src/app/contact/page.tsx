@@ -101,7 +101,7 @@ export default function ContactPage() {
                   allowFullScreen={true} 
                   loading="lazy" 
                   referrerPolicy="no-referrer-when-downgrade"
-                  className="absolute inset-0 grayscale group-hover:grayscale-0 transition-all duration-500"
+                  className="absolute inset-0 transition-all duration-500"
                 ></iframe>
               </div>
             </div>

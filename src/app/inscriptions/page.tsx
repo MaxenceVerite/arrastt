@@ -1,6 +1,30 @@
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/server";
 
-export default function InscriptionsPage() {
+export const revalidate = 60;
+
+export default async function InscriptionsPage() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from('site_content')
+    .select('content')
+    .eq('section_key', 'inscriptions_documents')
+    .single();
+
+  const documents = data?.content || [
+    { category: "Administratifs", title: "PIÈCES À FOURNIR POUR DEMANDE DE LICENCE 2026-2027", url: "#" },
+    { category: "Administratifs", title: "AUTO QUESTIONNAIRE MAJEUR_LICENCE DÉCOUVERTE 2026-2027", url: "#" },
+    { category: "Administratifs", title: "DEMANDE DE LICENCE DÉCOUVERTE 2026-2027", url: "#" },
+    { category: "Administratifs", title: "FICHE DE RENSEIGNEMENT MINEUR 2026-2027", url: "#" },
+    { category: "Administratifs", title: "AUTO QUESTIONNAIRE MINEUR 2026-2027", url: "#" },
+    { category: "Administratifs", title: "CERTIFICAT MÉDICAL 2026-2027", url: "#" },
+    { category: "Administratifs", title: "ADHÉSION OU RENOUVELLEMENT LICENCE SAISON 2026-2027", url: "#" },
+    { category: "Divers", title: "CHARTE DU CLUB", url: "#" }
+  ];
+
+  const adminDocs = documents.filter((d: any) => d.category === "Administratifs");
+  const diversDocs = documents.filter((d: any) => d.category === "Divers");
+
   return (
     <div className="flex flex-col w-full bg-zinc-50 overflow-x-hidden min-h-screen">
       
@@ -81,38 +105,49 @@ export default function InscriptionsPage() {
               </div>
             </div>
 
-            {/* Documents à fournir */}
+            {/* Documents */}
             <div className="bg-white border-2 border-zinc-200 p-8 md:p-12">
               <h2 className="text-3xl font-black text-primary-dark uppercase mb-8 flex items-center gap-4">
                 <div className="w-4 h-8 bg-accent-purple"></div>
-                Documents à fournir
+                Documents
               </h2>
               
               <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 border-2 border-zinc-100 hover:border-primary transition-colors">
-                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center text-primary font-black text-xl shrink-0">1</div>
-                  <div>
-                    <h4 className="font-bold text-lg text-primary-dark">Formulaire d'inscription</h4>
-                    <p className="text-zinc-600 text-sm mb-3">À remplir et signer (par le représentant légal pour les mineurs).</p>
-                    <button className="text-xs font-black uppercase bg-primary text-white px-4 py-2 hover:bg-primary-dark transition-colors">Télécharger le PDF</button>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4 p-4 border-2 border-zinc-100 hover:border-primary transition-colors">
-                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center text-primary font-black text-xl shrink-0">2</div>
-                  <div>
-                    <h4 className="font-bold text-lg text-primary-dark">Certificat Médical</h4>
-                    <p className="text-zinc-600 text-sm">Mentionnant "Pratique du tennis de table en compétition". Valable 3 ans.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-4 p-4 border-2 border-zinc-100 hover:border-primary transition-colors">
-                  <div className="w-12 h-12 bg-primary/10 flex items-center justify-center text-primary font-black text-xl shrink-0">3</div>
-                  <div>
-                    <h4 className="font-bold text-lg text-primary-dark">Règlement</h4>
-                    <p className="text-zinc-600 text-sm">Par chèque (à l'ordre de l'Arras TT), espèces, ou virement bancaire.</p>
-                  </div>
-                </div>
+                {adminDocs.length > 0 && (
+                  <>
+                    <h3 className="font-bold text-lg text-primary/60 border-b-2 border-zinc-100 pb-2 mb-4">Administratifs</h3>
+                    {adminDocs.map((doc: any, idx: number) => (
+                      <div key={`admin-${idx}`} className="flex items-center gap-6 p-4 border-2 border-zinc-100 hover:border-primary transition-colors bg-white">
+                        <div className="w-12 h-16 bg-red-600 rounded-sm flex items-center justify-center shrink-0 relative overflow-hidden shadow-sm">
+                           <div className="absolute top-0 right-0 w-4 h-4 bg-white/30 rounded-bl-sm"></div>
+                           <span className="text-white font-black text-[10px] uppercase mt-2">PDF</span>
+                        </div>
+                        <div className="flex flex-col items-start gap-2">
+                          <h4 className="font-bold text-sm text-primary-dark">{doc.title}</h4>
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-xs font-black text-primary-dark bg-accent-yellow px-4 py-1.5 shadow-[2px_2px_0px_0px_rgba(10,45,108,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(10,45,108,0.2)] transition-all">Télécharger le document</a>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {diversDocs.length > 0 && (
+                  <>
+                    <h3 className="font-bold text-lg text-primary/60 border-b-2 border-zinc-100 pb-2 mt-8 mb-4">Divers</h3>
+                    {diversDocs.map((doc: any, idx: number) => (
+                      <div key={`divers-${idx}`} className="flex items-center gap-6 p-4 border-2 border-zinc-100 hover:border-primary transition-colors bg-white">
+                        <div className="w-12 h-16 bg-red-600 rounded-sm flex items-center justify-center shrink-0 relative overflow-hidden shadow-sm">
+                           <div className="absolute top-0 right-0 w-4 h-4 bg-white/30 rounded-bl-sm"></div>
+                           <span className="text-white font-black text-[10px] uppercase mt-2">PDF</span>
+                        </div>
+                        <div className="flex flex-col items-start gap-2">
+                          <h4 className="font-bold text-sm text-primary-dark">{doc.title}</h4>
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="text-xs font-black text-primary-dark bg-accent-yellow px-4 py-1.5 shadow-[2px_2px_0px_0px_rgba(10,45,108,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(10,45,108,0.2)] transition-all">Télécharger le document</a>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             </div>
 
