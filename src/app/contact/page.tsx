@@ -109,7 +109,7 @@ export default function ContactPage() {
             {/* Salle Photo */}
             <div className="relative w-full aspect-video border-4 border-white shadow-xl overflow-hidden group">
               <Image 
-                src="/medias/devanture_salle_vandamme.jpg" 
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/medias/devanture_salle_vandamme.jpg`} 
                 alt="Devanture Salle Vandamme" 
                 fill 
                 className="object-cover transition-transform duration-700 group-hover:scale-110" 
