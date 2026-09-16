@@ -252,7 +252,7 @@ async function syncIndividualStats(fullHistory: boolean = false) {
     // Si c'est un nouveau joueur ou si on demande un full history, on utilise l'API mysql
     const useMysql = fullHistory || isNewPlayer;
     const endpoint = useMysql ? 'xml_partie_mysql' : 'xml_partie';
-    const params = useMysql ? { licence } : { numlic: licence };
+    const params: Record<string, string> = useMysql ? { licence } : { numlic: licence };
     
     // 1. Fetch parties
     const resultPartie = await fetchFromFftt(endpoint, params);
