@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
 import ClubCarousel from "./ClubCarousel";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
+
+export const revalidate = 3600;
 
 export default async function ClubPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: clubInfo } = await supabase.from('club_info').select('*').single();
   
   // Fetch club carousel images

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import MediaLibraryModal from "@/components/admin/MediaLibraryModal";
-import { getNewsById, updateNews } from "../actions";
+import { getNewsById, updateNews } from "../../actions";
 import { useRouter } from "next/navigation";
 
 export default function AdminNewsEdit({ params }: { params: { id: string } }) {

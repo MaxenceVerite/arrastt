@@ -1,10 +1,10 @@
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 import MediasGallery from "./MediasGallery";
 
-export const revalidate = 60; // Revalidate every minute
+export const revalidate = 3600; // Revalidate every hour
 
 export default async function MediasPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   
   // Fetch media from CMS (site_content)
   const { data: mediaContent } = await supabase

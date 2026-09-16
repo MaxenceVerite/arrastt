@@ -1,11 +1,11 @@
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 import Script from "next/script";
 import PlayersList from "./PlayersList";
 
-export const revalidate = 60; // Revalidate every minute if necessary
+export const revalidate = 3600; // Revalidate every hour
 
 export default async function JoueursPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   
   // Fetch data
   const { data: teams } = await supabase.from('teams').select('*').order('name');

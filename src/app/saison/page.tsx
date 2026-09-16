@@ -1,11 +1,11 @@
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 import Script from "next/script";
 import MatchCalendar from "./MatchCalendar";
 
-export const revalidate = 60; // Revalidate every minute if necessary
+export const revalidate = 3600; // Revalidate every hour
 
 export default async function SaisonPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   
   // Fetch matches
   const { data: matches } = await supabase.from('team_matches').select('*, teams(name)').order('match_date', { ascending: false });

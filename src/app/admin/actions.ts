@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -68,6 +69,9 @@ export async function updateSiteContent(sectionKey: string, content: any) {
     console.error("Error updating site_content:", error);
     return { success: false, error: "Erreur lors de la sauvegarde" };
   }
+
+  // Purge Vercel cache for all public pages that might use this content
+  revalidatePath("/", "layout");
 
   return { success: true };
 }

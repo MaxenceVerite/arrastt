@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
+
+export const revalidate = 3600;
 
 export const metadata = {
   title: "Nos Partenaires | Arras TT",
@@ -16,7 +18,7 @@ type Partner = {
 };
 
 export default async function PartenairesPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
 
   // Fetch partners
   const { data } = await supabase

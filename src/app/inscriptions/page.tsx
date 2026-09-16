@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function InscriptionsPage() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data } = await supabase
     .from('site_content')
     .select('content')

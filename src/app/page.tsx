@@ -1,10 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import Script from "next/script";
-import { createClient } from "@/utils/supabase/server";
+import { createPublicClient } from "@/utils/supabase/server";
+
+export const revalidate = 3600;
 
 export default async function Home() {
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: matches } = await supabase.from('team_matches').select('*, teams(name)').order('match_date', { ascending: false });
   
   const { data: partnersData } = await supabase.from("site_content").select("content").eq("section_key", "partners").single();
